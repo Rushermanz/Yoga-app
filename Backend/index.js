@@ -5,6 +5,14 @@ try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (e) {}
 
+// Prevent uncaught errors from crashing the Express server
+process.on('unhandledRejection', (reason) => {
+  console.warn('MongoDB / Async notice:', reason && reason.message ? reason.message : reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Server exception caught:', err && err.message ? err.message : err);
+});
+
 const express = require('express');
 const app = express();
 const jwt = require('jsonwebtoken');
@@ -56,16 +64,21 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect asynchronously so routes are immediately registered
-    client.connect()
-      .then(async () => {
+    // Retry loop for MongoDB connection
+    let retryTimer = null;
+    const connectToMongo = async () => {
+      try {
+        await client.connect();
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.warn("MongoDB connection warning:", err.message);
         console.warn("If you see SSL alert 80, please ensure your IP address is whitelisted in MongoDB Atlas Network Access.");
-      });
+        if (retryTimer) clearTimeout(retryTimer);
+        retryTimer = setTimeout(connectToMongo, 10000);
+      }
+    };
+    connectToMongo();
 
     // Create a database and collections
     const database = client.db("yoga-master");
@@ -179,9 +192,14 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     });
 
     app.get("/classes", async (req, res) => {
-      const query = { status: "approved" };
-      const result = await classesCollection.find().toArray();
-      res.send(result);
+      try {
+        const query = { status: "approved" };
+        const result = await classesCollection.find().toArray();
+        res.send(result);
+      } catch (err) {
+        console.warn("/classes query fallback:", err.message);
+        res.send([]);
+      }
     });
 
     //get classes by instructor email address
@@ -379,54 +397,63 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
      // ! ENROLLED ROUTES
 
      app.get('/popular_classes', async (req, res) => {
-      const result = await classesCollection.find().sort({ totalEnrolled: -1 }).limit(6).toArray();
-      res.send(result);
+      try {
+        const result = await classesCollection.find().sort({ totalEnrolled: -1 }).limit(6).toArray();
+        res.send(result);
+      } catch (err) {
+        console.warn("/popular_classes query fallback:", err.message);
+        res.send([]);
+      }
   })
 
 
   app.get('/popular-instructors', async (req, res) => {
-    const pipeline = [
-        {
-            $group: {
-                _id: "$instructorEmail",
-                totalEnrolled: { $sum: "$totalEnrolled" }
+    try {
+      const pipeline = [
+          {
+              $group: {
+                  _id: "$instructorEmail",
+                  totalEnrolled: { $sum: "$totalEnrolled" }
+              }
+          },
+          {
+              $lookup: {
+                  from: "users",
+                  localField: "_id",
+                  foreignField: "email",
+                  as: "instructor"
+              }
+          },
+          {
+            $match: {
+              "instructor.role": "instructor",
+            }
+          },
+          {
+            $project: {
+                _id: 0,
+                instructor: {
+                    $arrayElemAt: ["$instructor", 0]
+                },
+                totalEnrolled: 1
             }
         },
         {
-            $lookup: {
-                from: "users",
-                localField: "_id",
-                foreignField: "email",
-                as: "instructor"
+            $sort: {
+                totalEnrolled: -1
             }
         },
         {
-          $match: {
-            "instructor.role": "instructor",
-          }
-        },
-        {
-          $project: {
-              _id: 0,
-              instructor: {
-                  $arrayElemAt: ["$instructor", 0]
-              },
-              totalEnrolled: 1
-          }
-      },
-      {
-          $sort: {
-              totalEnrolled: -1
-          }
-      },
-      {
-          $limit: 6
-      }
-    ];
+            $limit: 6
+        }
+      ];
 
-    const result = await classesCollection.aggregate(pipeline).toArray();
-    console.log("After lookup: ", result);
-    res.send(result);
+      const result = await classesCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    } catch (err) {
+      console.warn("/popular-instructors query fallback:", err.message);
+      res.send([]);
+    }
 });
 
 
@@ -458,8 +485,13 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
               // !GET ALL INSTrUCTOR  
 
               app.get('/instructors', async (req, res) => {
-                const result = await userCollection.find({ role: 'instructor' }).toArray();
-                res.send(result);
+                try {
+                  const result = await userCollection.find({ role: 'instructor' }).toArray();
+                  res.send(result);
+                } catch (err) {
+                  console.warn("/instructors query fallback:", err.message);
+                  res.send([]);
+                }
             })
     
     
