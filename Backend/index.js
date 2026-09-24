@@ -1,9 +1,14 @@
 
  
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
+
 const express = require('express');
 const app = express();
 const jwt = require('jsonwebtoken');
-const cors = require("cors");// Load from .env
+const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')('sk_test_51Q19vOL0hwv53RFqDDuFA6AT9trVnF29iJ7DkBoy1BNfd1j2eR4aJlGRXc3ZNXmyJfHZ0lT531wkZ5QurE1gV0J900IOgSbURA');
@@ -12,6 +17,7 @@ const stripe = require('stripe')('sk_test_51Q19vOL0hwv53RFqDDuFA6AT9trVnF29iJ7Dk
 app.use(cors());
 app.use(express.json());
 
+const JWT_SECRET = process.env.ACCESS_SECRET || 'c914bfba5241fa02c6bdf3b5e43a6d96e5e8e82ef62b95c0c97825d10d65b796';
 
 // Routes
 // SET TOKEN .
@@ -21,7 +27,7 @@ const verifyJWT = (req, res, next) => {
       return res.status(401).send({ error: true, message: 'Unauthorize access' })
   }
   const token = authorization?.split(' ')[1]
-  jwt.verify(token, process.env.ACCESS_SECRET, (err, decoded) => {
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
           return res.status(403).send({ error: true, message: 'forbidden user or token has expired' })
       }
@@ -33,7 +39,11 @@ const verifyJWT = (req, res, next) => {
 
 // MongoDB connection
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@yoga-master.owtjclx.mongodb.net/yoga-master?retryWrites=true&w=majority&appName=yoga-master`;
+const uri = process.env.MONGODB_URI || 
+  (process.env.MONGODB_USERNAME && process.env.MONGODB_PASSWORD ? 
+    `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.cbyvkrs.mongodb.net/yoga-master?retryWrites=true&w=majority` :
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.cbyvkrs.mongodb.net/yoga-master?retryWrites=true&w=majority`
+  );
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -46,8 +56,16 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server (optional starting in v4.7)
-    await client.connect();
+    // Connect asynchronously so routes are immediately registered
+    client.connect()
+      .then(async () => {
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      })
+      .catch((err) => {
+        console.warn("MongoDB connection warning:", err.message);
+        console.warn("If you see SSL alert 80, please ensure your IP address is whitelisted in MongoDB Atlas Network Access.");
+      });
 
     // Create a database and collections
     const database = client.db("yoga-master");
@@ -96,7 +114,7 @@ async function run() {
 
   app.post('/api/set-token', (req, res) => {
     const user = req.body;
-    const token = jwt.sign(user, process.env.ACCESS_SECRET, { expiresIn: '24h' })
+    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '24h' })
     res.send({ token })
 })
 
@@ -508,19 +526,13 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
 
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-    // console.log(stripe);
-    
-  } finally {
-    // Ensures that the client will close when you finish/error
+    // All routes successfully initialized
+  } catch (err) {
+    console.error("Error setting up routes:", err);
   }
 }
 
-run().catch(console.dir);
+run();
 
 app.get("/", (req, res) => {
   res.send("Hello 20!");
