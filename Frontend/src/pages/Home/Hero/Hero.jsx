@@ -1,0 +1,168 @@
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+
+// Animated product-preview card shown on the right side of the hero
+const PreviewCard = ({ children, className = '' }) => (
+  <div className={`bg-white rounded-card shadow-md border border-[#DDE3EA] ${className}`}>
+    {children}
+  </div>
+)
+
+const Hero = () => {
+  const navigate = useNavigate()
+
+  return (
+    <section
+      className="min-h-screen flex items-center relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #101828 0%, #1D2939 60%, #12B8A6 100%)' }}
+    >
+      {/* Subtle background grid pattern */}
+      <div
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #12B8A6 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 w-full pt-20 pb-12">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+
+          {/* ── Left: Copy ── */}
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6 text-white"
+          >
+            <div className="inline-flex items-center gap-2 bg-white/10 text-teal text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-teal/30">
+              <span className="w-1.5 h-1.5 bg-teal rounded-full"></span>
+              AI-Enhanced Fitness Platform
+            </div>
+
+            <h1 className="text-5xl md:text-6xl font-bold leading-[1.08] tracking-tight">
+              Train smarter.
+              <br />
+              <span className="text-teal">Move better.</span>
+            </h1>
+
+            <p className="text-lg text-white/70 max-w-md leading-relaxed">
+              Yoga classes, personal coaching, and smart training plans built around your goals and schedule.
+            </p>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                onClick={() => navigate('/register')}
+                className="px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm"
+              >
+                Find My Plan
+              </button>
+              <button
+                onClick={() => navigate('/classes')}
+                className="px-6 py-3 bg-white/10 text-white font-bold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm"
+              >
+                Explore Classes
+              </button>
+            </div>
+
+            {/* Quick stats */}
+            <div className="flex gap-8 pt-4">
+              {[
+                { value: '200+', label: 'Classes' },
+                { value: '40+',  label: 'Instructors' },
+                { value: '8k+',  label: 'Active learners' },
+              ].map(({ value, label }) => (
+                <div key={label}>
+                  <p className="text-2xl font-bold text-white">{value}</p>
+                  <p className="text-xs text-white/50 uppercase tracking-wide">{label}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* ── Right: Product Preview ── */}
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="hidden lg:block relative"
+          >
+            <div className="relative space-y-3">
+
+              {/* Today's Training card */}
+              <PreviewCard className="p-4">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Today's Training</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 3l14 9-14 9V3z" fill="#12B8A6"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">Mobility Reset</p>
+                    <p className="text-xs text-text-secondary">25 min · Beginner · Low Impact</p>
+                  </div>
+                  <div className="ml-auto">
+                    <span className="text-xs font-bold px-2.5 py-1 bg-teal text-white rounded-full">Resume</span>
+                  </div>
+                </div>
+                <div className="mt-3 bg-surface-2 rounded-full h-1.5">
+                  <div className="bg-teal h-1.5 rounded-full" style={{ width: '60%' }}></div>
+                </div>
+                <p className="text-xs text-text-secondary mt-1">60% complete</p>
+              </PreviewCard>
+
+              {/* Weekly streak + goal */}
+              <div className="grid grid-cols-2 gap-3">
+                <PreviewCard className="p-4">
+                  <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Weekly Goal</p>
+                  <p className="text-2xl font-bold text-text-primary">3 <span className="text-text-secondary text-base font-medium">/ 5</span></p>
+                  <p className="text-xs text-text-secondary mt-1">sessions this week</p>
+                  <div className="flex gap-1 mt-2">
+                    {['Mon','Tue','Wed','Thu','Fri'].map((d, i) => (
+                      <div key={d} className={`flex-1 h-1.5 rounded-full ${i < 3 ? 'bg-teal' : 'bg-surface-2'}`}></div>
+                    ))}
+                  </div>
+                </PreviewCard>
+                <PreviewCard className="p-4">
+                  <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Current Streak</p>
+                  <p className="text-2xl font-bold text-coral">🔥 12</p>
+                  <p className="text-xs text-text-secondary mt-1">days in a row</p>
+                </PreviewCard>
+              </div>
+
+              {/* Next Appointment */}
+              <PreviewCard className="p-4">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Next Appointment</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-surface-2 flex items-center justify-center text-sm font-bold text-teal flex-shrink-0">RK</div>
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">1-to-1 Mobility Session</p>
+                    <p className="text-xs text-text-secondary">Thursday · 6:30 PM · with Rohan Kumar</p>
+                  </div>
+                  <div className="ml-auto flex gap-2">
+                    <span className="text-xs font-bold px-2.5 py-1 bg-blue-ai-100 text-blue-ai rounded-full">Join</span>
+                  </div>
+                </div>
+              </PreviewCard>
+
+              {/* AI Coach pill */}
+              <PreviewCard className="p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-ai flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                  </svg>
+                </div>
+                <p className="text-sm text-text-primary"><span className="font-bold">AI Coach:</span> <span className="text-text-secondary">Recommended because you're working on mobility.</span></p>
+              </PreviewCard>
+
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default Hero
