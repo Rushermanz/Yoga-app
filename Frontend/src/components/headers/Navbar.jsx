@@ -7,7 +7,7 @@ import useUser from '../../hooks/useUser'
 
 const navLinks = [
   { name: 'Explore Classes', route: '/classes' },
-  { name: 'Instructors',     route: '/instructors' },
+  { name: 'Instructors', route: '/instructors' },
 ];
 
 const Navbar = () => {
@@ -71,7 +71,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 12H8v-1c0-2.21 3.58-4 4-4s4 1.79 4 4v1z" fill="white"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 12H8v-1c0-2.21 3.58-4 4-4s4 1.79 4 4v1z" fill="white" />
               </svg>
             </div>
             <span className={`text-lg font-bold tracking-tight transition-colors duration-300 ${logoClass}`}>
@@ -86,10 +86,9 @@ const Navbar = () => {
                 key={link.route}
                 to={link.route}
                 className={({ isActive }) =>
-                  `px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'text-teal bg-teal-100'
-                      : linkClass
+                  `px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${isActive
+                    ? 'text-teal bg-teal-100'
+                    : linkClass
                   }`
                 }
               >
@@ -104,9 +103,8 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className={`text-sm font-semibold px-4 py-2 rounded-btn transition-colors duration-200 ${
-                    isTransparent ? 'text-white hover:text-teal' : 'text-text-primary hover:text-teal'
-                  }`}
+                  className={`text-sm font-semibold px-4 py-2 rounded-btn transition-colors duration-200 ${isTransparent ? 'text-white hover:text-teal' : 'text-text-primary hover:text-teal'
+                    }`}
                 >
                   Sign In
                 </Link>
@@ -122,8 +120,7 @@ const Navbar = () => {
                 <NavLink
                   to="/dashboard"
                   className={({ isActive }) =>
-                    `text-sm font-semibold px-3 py-2 rounded-lg transition-colors duration-200 ${
-                      isActive ? 'text-teal' : linkClass
+                    `text-sm font-semibold px-3 py-2 rounded-lg transition-colors duration-200 ${isActive ? 'text-teal' : linkClass
                     }`
                   }
                 >
@@ -146,7 +143,7 @@ const Navbar = () => {
                 )}
                 <button
                   onClick={handleLogout}
-                  className="text-sm font-semibold px-4 py-2 border border-border-ui rounded-btn text-text-primary hover:border-teal hover:text-teal transition-colors duration-200"
+                  className="text-sm font-semibold px-4 py-2 border border-border-ui rounded-btn text-border-ui hover:border-teal hover:text-teal transition-colors duration-200"
                 >
                   Logout
                 </button>
@@ -162,9 +159,9 @@ const Navbar = () => {
           >
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
               {isMobileMenuOpen ? (
-                <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               )}
             </svg>
           </button>
@@ -187,8 +184,7 @@ const Navbar = () => {
                   key={link.route}
                   to={link.route}
                   className={({ isActive }) =>
-                    `block px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                      isActive ? 'bg-teal-100 text-teal' : 'text-text-primary hover:bg-surface-2'
+                    `block px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${isActive ? 'bg-teal-100 text-teal' : 'text-text-primary hover:bg-surface-2'
                     }`
                   }
                 >
@@ -198,7 +194,7 @@ const Navbar = () => {
               <div className="pt-2 border-t border-border-ui mt-2 flex flex-col gap-2">
                 {!user ? (
                   <>
-                    <Link to="/login"    className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-2">Sign In</Link>
+                    <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-2">Sign In</Link>
                     <Link to="/register" className="block px-3 py-2.5 rounded-lg text-sm font-bold bg-teal text-white text-center">Get Started</Link>
                   </>
                 ) : (

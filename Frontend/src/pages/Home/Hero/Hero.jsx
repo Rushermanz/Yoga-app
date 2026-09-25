@@ -36,10 +36,7 @@ const Hero = () => {
             transition={{ duration: 0.6 }}
             className="space-y-6 text-white"
           >
-            <div className="inline-flex items-center gap-2 bg-white/10 text-teal text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-teal/30">
-              <span className="w-1.5 h-1.5 bg-teal rounded-full"></span>
-              AI-Enhanced Fitness Platform
-            </div>
+
 
             <h1 className="text-5xl md:text-6xl font-bold leading-[1.08] tracking-tight">
               Train smarter.
@@ -70,8 +67,8 @@ const Hero = () => {
             <div className="flex gap-8 pt-4">
               {[
                 { value: '200+', label: 'Classes' },
-                { value: '40+',  label: 'Instructors' },
-                { value: '8k+',  label: 'Active learners' },
+                { value: '40+', label: 'Instructors' },
+                { value: '8k+', label: 'Active learners' },
               ].map(({ value, label }) => (
                 <div key={label}>
                   <p className="text-2xl font-bold text-white">{value}</p>
@@ -96,7 +93,7 @@ const Hero = () => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 3l14 9-14 9V3z" fill="#12B8A6"/>
+                      <path d="M5 3l14 9-14 9V3z" fill="#12B8A6" />
                     </svg>
                   </div>
                   <div>
@@ -120,7 +117,7 @@ const Hero = () => {
                   <p className="text-2xl font-bold text-text-primary">3 <span className="text-text-secondary text-base font-medium">/ 5</span></p>
                   <p className="text-xs text-text-secondary mt-1">sessions this week</p>
                   <div className="flex gap-1 mt-2">
-                    {['Mon','Tue','Wed','Thu','Fri'].map((d, i) => (
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => (
                       <div key={d} className={`flex-1 h-1.5 rounded-full ${i < 3 ? 'bg-teal' : 'bg-surface-2'}`}></div>
                     ))}
                   </div>
@@ -151,7 +148,7 @@ const Hero = () => {
               <PreviewCard className="p-3 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-ai flex items-center justify-center flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" />
                   </svg>
                 </div>
                 <p className="text-sm text-text-primary"><span className="font-bold">AI Coach:</span> <span className="text-text-secondary">Recommended because you're working on mobility.</span></p>
