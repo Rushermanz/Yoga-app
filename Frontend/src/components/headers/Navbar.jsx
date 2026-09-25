@@ -19,12 +19,30 @@ const Navbar = () => {
   const { currentUser } = useUser();
 
   const isHome = location.pathname === '/';
+  const [showNavGetStarted, setShowNavGetStarted] = useState(!isHome);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.pageYOffset > 60);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    const handleScroll = () => {
+      setScrolled(window.pageYOffset > 60);
+
+      if (isHome) {
+        const heroBtn = document.getElementById('hero-get-started');
+        if (heroBtn) {
+          const rect = heroBtn.getBoundingClientRect();
+          // Display navbar "Get Started" once user scrolls past the hero button
+          setShowNavGetStarted(rect.bottom <= 64);
+        } else {
+          setShowNavGetStarted(window.pageYOffset > 350);
+        }
+      } else {
+        setShowNavGetStarted(true);
+      }
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isHome, location.pathname]);
 
   // Close mobile menu on route change
   useEffect(() => setIsMobileMenuOpen(false), [location.pathname]);
@@ -108,12 +126,23 @@ const Navbar = () => {
                 >
                   Sign In
                 </Link>
-                <Link
-                  to="/register"
-                  className="text-sm font-bold px-5 py-2 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors duration-200"
-                >
-                  Get Started
-                </Link>
+                <AnimatePresence>
+                  {showNavGetStarted && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Link
+                        to="/register"
+                        className="text-sm font-bold px-5 py-2 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors duration-200 inline-block"
+                      >
+                        Get Started
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </>
             ) : (
               <>

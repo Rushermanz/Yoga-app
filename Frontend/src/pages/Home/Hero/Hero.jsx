@@ -50,10 +50,11 @@ const Hero = () => {
 
             <div className="flex flex-wrap gap-3 pt-2">
               <button
+                id="hero-get-started"
                 onClick={() => navigate('/register')}
                 className="px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm"
               >
-                Find My Plan
+                Get Started
               </button>
               <button
                 onClick={() => navigate('/classes')}
