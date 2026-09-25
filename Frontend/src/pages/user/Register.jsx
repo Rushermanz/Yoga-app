@@ -11,9 +11,20 @@ const inputClass =
 const labelClass = 'block text-xs font-bold text-text-primary mb-1.5'
 const errorClass = 'text-xs text-error mt-1'
 
+const friendlyError = (code) => {
+  switch (code) {
+    case 'auth/email-already-in-use': return 'This email is already registered. Try signing in instead.'
+    case 'auth/invalid-email': return 'Please enter a valid email address.'
+    case 'auth/weak-password': return 'Password is too weak. Use at least 6 characters.'
+    case 'auth/operation-not-allowed': return 'Email/password sign-up is not enabled. Contact support.'
+    case 'auth/network-request-failed': return 'Network error. Check your internet connection and try again.'
+    default: return code ? `Error: ${code}` : 'Something went wrong. Please try again.'
+  }
+}
+
 const Register = () => {
   const navigate = useNavigate()
-  const { signUp, setError } = useContext(AuthContext)
+  const { signUp, error, setError } = useContext(AuthContext)
   const {
     register,
     handleSubmit,
@@ -24,6 +35,7 @@ const Register = () => {
   const password = watch('password', '')
 
   const onSubmit = async (data) => {
+    setError('')
     try {
       const result = await signUp(data.email, data.password)
       const user = result.user
@@ -43,7 +55,8 @@ const Register = () => {
         navigate('/')
       }
     } catch (err) {
-      setError(err.code)
+      console.error('Registration error:', err)
+      setError(err.code || 'unknown')
     }
   }
 
@@ -90,7 +103,13 @@ const Register = () => {
           </Link>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-1 tracking-tight">Create your account</h1>
-          <p className="text-sm text-text-secondary mb-6">Get started in under 2 minutes.</p>
+          <p className="text-sm text-text-secondary mb-4">Get started in under 2 minutes.</p>
+
+          {error && (
+            <div className="mb-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+              {friendlyError(error)}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
