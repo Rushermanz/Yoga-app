@@ -1,6 +1,5 @@
 import React from 'react'
 import useUser from '../../../hooks/useUser'
-import { Link } from 'react-router-dom'
 
 const getGreeting = () => {
   const hour = new Date().getHours()
@@ -127,27 +126,6 @@ const StudentCP = () => {
             <button className="flex-1 py-1.5 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors">Join</button>
             <button className="flex-1 py-1.5 border border-border-ui text-xs font-bold rounded-btn hover:border-teal text-text-secondary hover:text-teal transition-colors">Reschedule</button>
           </div>
-        </div>
-      </div>
-
-      {/* Quick links */}
-      <div className="bg-white rounded-card border border-border-ui p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Quick Actions</p>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'My enrolled classes', to: '/dashboard/enrolled-class' },
-            { label: 'Saved classes',        to: '/dashboard/my-selected' },
-            { label: 'Payment history',      to: '/dashboard/my-payments' },
-            { label: 'Become an instructor', to: '/dashboard/apply-instructor' },
-          ].map(({ label, to }) => (
-            <Link
-              key={to}
-              to={to}
-              className="text-xs font-semibold px-3.5 py-2 border border-border-ui rounded-btn text-text-primary hover:border-teal hover:text-teal transition-all duration-150"
-            >
-              {label}
-            </Link>
-          ))}
         </div>
       </div>
     </div>
