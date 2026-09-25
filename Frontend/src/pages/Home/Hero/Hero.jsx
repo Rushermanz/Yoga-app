@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 // Animated product-preview card shown on the right side of the hero
@@ -19,14 +19,14 @@ const Hero = () => {
     >
       {/* Subtle background grid pattern */}
       <div
-        className="absolute inset-0 opacity-5"
+        className="absolute inset-0 opacity-5 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, #12B8A6 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
 
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 w-full pt-20 pb-12">
+      <div className="relative z-10 max-w-[1360px] mx-auto px-4 sm:px-6 w-full pt-20 pb-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
           {/* ── Left: Copy ── */}
@@ -49,19 +49,19 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <button
+              <Link
+                to="/register"
                 id="hero-get-started"
-                onClick={() => navigate('/register')}
-                className="px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm"
+                className="inline-flex items-center justify-center px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm cursor-pointer select-none"
               >
                 Get Started
-              </button>
-              <button
-                onClick={() => navigate('/classes')}
-                className="px-6 py-3 bg-white/10 text-white font-bold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm"
+              </Link>
+              <Link
+                to="/classes"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white/10 text-white font-bold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
               >
                 Explore Classes
-              </button>
+              </Link>
             </div>
 
             {/* Quick stats */}

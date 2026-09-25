@@ -32,18 +32,19 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-bg-base flex">
       {/* Left: form */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 max-w-md mx-auto w-full">
-        <Link to="/" className="flex items-center gap-2 mb-10">
-          <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 12H8v-1c0-2.21 3.58-4 4-4s4 1.79 4 4v1z" fill="white"/>
-            </svg>
-          </div>
-          <span className="text-navy font-bold text-base">Yoga Master</span>
-        </Link>
+      <div className="flex-1 flex flex-col px-6 py-8 sm:py-12 overflow-y-auto">
+        <div className="max-w-md mx-auto w-full my-auto">
+          <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
+            <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center transition-transform group-hover:scale-105">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 12H8v-1c0-2.21 3.58-4 4-4s4 1.79 4 4v1z" fill="white"/>
+              </svg>
+            </div>
+            <span className="text-navy font-bold text-base group-hover:text-teal transition-colors">Yoga Master</span>
+          </Link>
 
-        <h1 className="text-2xl font-bold text-navy mb-1">Welcome back</h1>
-        <p className="text-sm text-text-secondary mb-8">Sign in to continue your training.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-1 tracking-tight">Welcome back</h1>
+          <p className="text-sm text-text-secondary mb-8">Sign in to continue your training.</p>
 
         {error && (
           <div className="mb-4 px-4 py-3 bg-error/10 border border-error/30 rounded-lg text-sm text-error font-medium">
@@ -125,6 +126,7 @@ const Login = () => {
             Get started
           </Link>
         </p>
+        </div>
       </div>
 
       {/* Right: brand panel */}

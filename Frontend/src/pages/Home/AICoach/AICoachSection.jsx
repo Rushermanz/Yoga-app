@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 const AICoachSection = () => {
@@ -112,12 +112,12 @@ const AICoachSection = () => {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => navigate('/register')}
-              className="px-6 py-3 bg-blue-ai text-white font-bold rounded-btn hover:bg-blue-600 transition-all duration-200 text-sm"
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center px-6 py-3 bg-blue-ai text-white font-bold rounded-btn hover:bg-blue-600 transition-all duration-200 text-sm cursor-pointer select-none"
             >
               Try the AI Coach
-            </button>
+            </Link>
           </motion.div>
         </div>
       </div>

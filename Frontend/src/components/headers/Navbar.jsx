@@ -15,11 +15,11 @@ const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showNavGetStarted, setShowNavGetStarted] = useState(false);
   const { logout, user } = useContext(AuthContext);
   const { currentUser } = useUser();
 
   const isHome = location.pathname === '/';
-  const [showNavGetStarted, setShowNavGetStarted] = useState(!isHome);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,7 +29,7 @@ const Navbar = () => {
         const heroBtn = document.getElementById('hero-get-started');
         if (heroBtn) {
           const rect = heroBtn.getBoundingClientRect();
-          // Display navbar "Get Started" once user scrolls past the hero button
+          // Show navbar button only after the hero button scrolls out of view
           setShowNavGetStarted(rect.bottom <= 64);
         } else {
           setShowNavGetStarted(window.pageYOffset > 350);
@@ -129,14 +129,14 @@ const Navbar = () => {
                 <AnimatePresence>
                   {showNavGetStarted && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
                     >
                       <Link
                         to="/register"
-                        className="text-sm font-bold px-5 py-2 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors duration-200 inline-block"
+                        className="text-sm font-bold px-5 py-2 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors duration-200 inline-block shadow-sm"
                       >
                         Get Started
                       </Link>

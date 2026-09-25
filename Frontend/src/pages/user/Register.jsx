@@ -78,22 +78,22 @@ const Register = () => {
       </div>
 
       {/* Right: form */}
-      <div className="flex-1 flex flex-col justify-center px-6 py-12 overflow-y-auto">
-        <div className="max-w-md mx-auto w-full">
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center">
+      <div className="flex-1 flex flex-col px-4 sm:px-8 py-8 sm:py-12 overflow-y-auto">
+        <div className="max-w-md mx-auto w-full my-auto">
+          <Link to="/" className="inline-flex items-center gap-2 mb-6 group">
+            <div className="w-7 h-7 rounded-lg bg-teal flex items-center justify-center transition-transform group-hover:scale-105">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 12H8v-1c0-2.21 3.58-4 4-4s4 1.79 4 4v1z" fill="white"/>
               </svg>
             </div>
-            <span className="text-navy font-bold text-base">Yoga Master</span>
+            <span className="text-navy font-bold text-base group-hover:text-teal transition-colors">Yoga Master</span>
           </Link>
 
-          <h1 className="text-2xl font-bold text-navy mb-1">Create your account</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-1 tracking-tight">Create your account</h1>
           <p className="text-sm text-text-secondary mb-6">Get started in under 2 minutes.</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label htmlFor="name" className={labelClass}>Full name</label>
                 <input
@@ -118,7 +118,7 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label htmlFor="password" className={labelClass}>Password</label>
                 <input
@@ -146,7 +146,7 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label htmlFor="phone" className={labelClass}>Phone</label>
                 <input
