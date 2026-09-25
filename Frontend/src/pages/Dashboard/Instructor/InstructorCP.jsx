@@ -1,6 +1,5 @@
 import React from 'react'
 import useUser from '../../../hooks/useUser'
-import { Link } from 'react-router-dom'
 
 const getGreeting = () => {
   const hour = new Date().getHours()
@@ -39,29 +38,6 @@ const InstructorCP = () => {
         <MetricCard label="Active students"  value="—" color="text-blue-ai" bg="bg-blue-ai-100" icon="👥" />
         <MetricCard label="Upcoming sessions" value="—" color="text-coral"  bg="bg-coral-100"   icon="📅" />
         <MetricCard label="Avg rating"       value="—" color="text-warning" bg="bg-surface-2"   icon="⭐" />
-      </div>
-
-      {/* Quick actions */}
-      <div className="bg-white rounded-card border border-border-ui p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Quick Actions</p>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'Create a class', to: '/dashboard/add-class' },
-            { label: 'My classes',     to: '/dashboard/my-classes' },
-          ].map(({ label, to }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`text-sm font-bold px-4 py-2 rounded-btn transition-all duration-150 ${
-                label === 'Create a class'
-                  ? 'bg-teal text-white hover:bg-teal-600'
-                  : 'border border-border-ui text-text-primary hover:border-teal hover:text-teal'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
       </div>
 
       {/* Getting started tips */}

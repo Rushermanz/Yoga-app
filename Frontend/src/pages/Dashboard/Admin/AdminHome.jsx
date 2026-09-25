@@ -53,25 +53,6 @@ const AdminHome = () => {
         <MetricCard label="Pending approvals"   value={stats?.pendingClasses} color="text-coral"   bg="bg-coral-100"   icon="⏳" />
       </div>
 
-      {/* Quick actions */}
-      <div className="bg-white rounded-card border border-border-ui p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Quick Actions</p>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'Manage users',      to: '/dashboard/manage-users' },
-            { label: 'Manage classes',    to: '/dashboard/manage-class' },
-          ].map(({ label, to }) => (
-            <Link
-              key={to}
-              to={to}
-              className="text-sm font-semibold px-4 py-2 border border-border-ui rounded-btn text-text-primary hover:border-teal hover:text-teal transition-all duration-150"
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Users table preview */}
       <div className="bg-white rounded-card border border-border-ui overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-ui">
