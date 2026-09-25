@@ -57,7 +57,7 @@
             "transactionId": "pi_3OpBXRCmx8hfkpYc0Aoc4Hqx",
             "paymentMethod": "pm_1OpBYECmx8hfkpYcaT84EYMN",
             "amount": 50,
-            "currency": "usd",
+            "currency": "inr",
             "paymentStatus": "succeeded",
             "userName": "Eye Lark",
             "userEmail": "eyelark18@gmail.com",

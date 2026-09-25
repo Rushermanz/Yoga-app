@@ -67,14 +67,14 @@ const MyPaymentHistory = () => {
      
     <div>
         <p className="font-bold">Total Payments: {payments.length}</p>
-        <p className="font-bold">Total Paid: ${totalPaidAmount}</p>
+        <p className="font-bold">Total Paid: ₹{totalPaidAmount}</p>
     </div>
       
      <table  className='w-full'>
      <thead>
                                 <tr>
                                     <th className='font-semibold text-left'>#</th>
-                                    <th className='font-semibold text-left'>Amount</th>
+                                    <th className='font-semibold text-left'>Amount (₹)</th>
                                     <th className='font-semibold text-left'>Total Item</th>
                                     <th className='font-semibold text-left'>Time</th>
                                 </tr>
@@ -85,7 +85,7 @@ const MyPaymentHistory = () => {
     paginatedPayments.map((Payment, idx) => (
       <tr key={idx}> {/* Added key prop for unique identification */}
         <td className='py-4'>{idx + 1}</td>
-        <td className="px-6 py-4 whitespace-nowrap">{Payment.amount}</td>
+        <td className="px-6 py-4 whitespace-nowrap font-semibold">₹{Payment.amount}</td>
         <td className="px-6 py-4 whitespace-nowrap">{Payment.classesId.length}</td>
         <td className='py-4'>
           <p className='text-sm text-green-700'>

@@ -230,7 +230,7 @@ const Classes = () => {
                     <div className="flex items-center gap-3 text-xs text-text-secondary mb-4">
                       <span>{cls.availableSeats} seats left</span>
                       <span className="ml-auto font-bold text-text-primary">
-                        {(cls.price ?? cls.Price) === 0 ? 'Free' : `$${cls.price ?? cls.Price ?? 0}`}
+                        {(cls.price ?? cls.Price) === 0 ? 'Free' : `₹${cls.price ?? cls.Price ?? 0}`}
                       </span>
                     </div>
                     <div className="flex gap-2 mt-auto">

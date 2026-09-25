@@ -117,8 +117,8 @@ const AddClass = () => {
                 </div>
                 
                 <div className='mb-6'>
-                <label className='block mb-2 font-bold text-gray-700' htmlFor="price">Price</label>
-                <input className='w-full px-4 py-2 border rounded-md border-secondary focus:outline-none focus:ring-blue-500' type="number" required placeholder='How much it cost?' name="Price" />
+                <label className='block mb-2 font-bold text-gray-700' htmlFor="price">Price (₹ INR)</label>
+                <input className='w-full px-4 py-2 border rounded-md border-secondary focus:outline-none focus:ring-blue-500' type="number" required placeholder='Course price in INR (₹)' name="Price" />
                 </div>
             </div>
 

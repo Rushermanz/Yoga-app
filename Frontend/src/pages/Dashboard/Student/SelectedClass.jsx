@@ -97,7 +97,7 @@ const SelectedClass = () => {
                                 <tr>
                                     <th className='font-semibold text-left'>#</th>
                                     <th className='font-semibold text-left'>Product</th>
-                                    <th className='font-semibold text-left'>Price</th>
+                                    <th className='font-semibold text-left'>Price (₹)</th>
                                     <th className='font-semibold text-left'>Date</th>
                                     <th className='font-semibold text-left'>Actions</th>
                                 </tr>
@@ -118,7 +118,7 @@ const SelectedClass = () => {
                                                     <span>{item.name}</span>
                                                 </div>
                                             </td>
-                                            <td className='py-4'>${item.price}</td>
+                                            <td className='py-4 font-semibold'>₹{item.price}</td>
                                             <td className='py-4'>
                                                 <p className='text-sm text-green-700'>
                                                     {moment(item.submitted).format("MMMM Do YYYY")}
@@ -126,7 +126,7 @@ const SelectedClass = () => {
                                             </td>
                                             <td className='flex gap-2 py-4 pt-8'>
                                             <button onClick={() => handleDelete(item._id) } className='px-3 py-1 font-bold text-white bg-red-500 cursor-pointer rounded-3xl'><MdDeleteSweep /></button>
-                                            <button onClick={() => handlePay(item._id)} className='flex items-center px-3 py-1 font-bold text-white bg-green-500 cursor-pointer rounded-3xl'><FiDollarSign className='mr-2'/></button>
+                                            <button onClick={() => handlePay(item._id)} className='flex items-center gap-1 px-3 py-1 font-bold text-white bg-green-500 hover:bg-green-600 transition-colors cursor-pointer rounded-3xl text-xs'>₹ Pay</button>
                                             </td>
                                         </tr>
                                         );
@@ -146,22 +146,22 @@ const SelectedClass = () => {
                             <h2 className='mb-4 text-lg font-semibold'>Summary</h2>
                             <div className='flex justify-between mb-2'>
                                 <span>Subtotal</span>
-                                <span>${totalPrice}</span>
+                                <span>₹{totalPrice}</span>
                             </div>
                             <div className='flex justify-between mb-2'>
                                 <span>Taxes</span>
-                                <span>${totalTax.toFixed(2)}</span>
+                                <span>₹{totalTax.toFixed(2)}</span>
                             </div>
                             
                             <div className='flex justify-between mb-2'>
                                 <span>Extra Fees</span>
-                                <span>$0</span>
+                                <span>₹0</span>
                             </div>
                             <hr className='my-2'/>
                             
                             <div className='flex justify-between mb-2'>
                                 <span className='font-semibold'>Total</span>
-                                <span className='font-semibold'>${price.toFixed(2)}</span>
+                                <span className='font-semibold'>₹{price.toFixed(2)}</span>
                             </div>
                             
                             <button disabled={price <= 0} onClick={() => navigate('/dashboard/user/payment', { state: { price: price, itemId: null } })}

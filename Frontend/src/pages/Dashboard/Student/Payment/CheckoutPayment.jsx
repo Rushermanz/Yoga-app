@@ -127,7 +127,7 @@ const handleSubmit = async (event) => {
     <>
       <div className="text-center ">
         <h1 className="text-2xl font-bold">
-          Payment Amount : <span className="text-secondary">{price}$</span>
+          Payment Amount : <span className="text-secondary">₹{price}</span>
         </h1>
       </div>
       <form className='mt-20' onSubmit={handleSubmit}>
