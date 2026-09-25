@@ -47,7 +47,7 @@ const Card = ({ item }) => {
           <span>{totalEnrolled || 0} enrolled</span>
           {price !== undefined && (
             <span className="ml-auto font-bold text-text-primary">
-              {price === 0 ? 'Free' : `$${price}`}
+              {price === 0 ? 'Free' : `₹${price}`}
             </span>
           )}
         </div>

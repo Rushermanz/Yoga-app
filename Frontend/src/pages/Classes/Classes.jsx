@@ -162,7 +162,7 @@ const Classes = () => {
                     <div className="flex items-center gap-3 text-xs text-text-secondary mb-4">
                       <span>{cls.availableSeats} seats left</span>
                       <span className="ml-auto font-bold text-text-primary">
-                        {cls.price === 0 ? 'Free' : `$${cls.price}`}
+                        {cls.price === 0 ? 'Free' : `₹${cls.price}`}
                       </span>
                     </div>
                     <div className="flex gap-2 mt-auto">

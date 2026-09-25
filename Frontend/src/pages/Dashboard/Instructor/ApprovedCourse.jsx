@@ -1,9 +1,8 @@
 import React from 'react'
+import MyClasses from './MyClasses'
 
 const ApprovedCourse = () => {
-  return (
-    <div className='my-10'>ApprovedCourse</div>
-  )
+  return <MyClasses filterStatus="approved" />
 }
 
 export default ApprovedCourse

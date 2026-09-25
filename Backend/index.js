@@ -88,6 +88,7 @@ async function run() {
     const enrolledCollection = database.collection("enrolled");
     const paymentCollection = database.collection("payments");
     const appliedCollection = database.collection("applied");
+    const reviewsCollection = database.collection("reviews");
 
 
     
@@ -108,7 +109,7 @@ async function run() {
           const email = req.decoded.email;
           const query = { email: email };
           const user = await userCollection.findOne(query);
-          if (user.role === 'instructor' || user.role === 'admin') {
+          if (user && (user.role === 'instructor' || user.role === 'admin')) {
               next()
           }
           else {
@@ -272,6 +273,126 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
 
+    // Delete a class (instructor can delete their own class, admin can delete any)
+    const deleteClassHandler = async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: true, message: "Invalid class ID" });
+        }
+
+        const email = req.decoded.email;
+        const user = await userCollection.findOne({ email: email });
+
+        let query = { _id: new ObjectId(id) };
+        // If not admin, ensure instructor can only delete their own class
+        if (user?.role !== "admin") {
+          query.instructorEmail = email;
+        }
+
+        const result = await classesCollection.deleteOne(query);
+        if (result.deletedCount > 0) {
+          // Clean up any cart items referencing this deleted class
+          await cartCollection.deleteMany({ classId: id });
+          res.send(result);
+        } else {
+          res.status(404).send({ error: true, message: "Class not found or you are not authorized to delete it" });
+        }
+      } catch (err) {
+        console.error("Error deleting class:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    };
+
+    app.delete("/delete-class/:id", verifyJWT, verifyInstructor, deleteClassHandler);
+    app.delete("/class/:id", verifyJWT, verifyInstructor, deleteClassHandler);
+
+    // Live Class Session Routes
+    // Update live session status (start or end live session)
+    app.put("/classes/live-status/:id", verifyJWT, verifyInstructor, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { liveStatus } = req.body; // 'upcoming' | 'live' | 'ended'
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: true, message: "Invalid class ID" });
+        }
+
+        const email = req.decoded.email;
+        const user = await userCollection.findOne({ email });
+
+        let filter = { _id: new ObjectId(id) };
+        if (user?.role !== "admin") {
+          filter.instructorEmail = email;
+        }
+
+        const updateDoc = {
+          $set: {
+            liveStatus: liveStatus || "live",
+            lastLiveUpdate: new Date(),
+          },
+        };
+
+        const result = await classesCollection.updateOne(filter, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(403).send({ error: true, message: "Not authorized to update this live session" });
+        }
+        res.send({ success: true, liveStatus });
+      } catch (err) {
+        console.error("Error updating live status:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
+
+    // Get live session verification and room details
+    app.get("/classes/live-session/:id", verifyJWT, async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: true, message: "Invalid class ID" });
+        }
+
+        const email = req.decoded.email;
+        const classItem = await classesCollection.findOne({ _id: new ObjectId(id) });
+        if (!classItem) {
+          return res.status(404).send({ error: true, message: "Class not found" });
+        }
+
+        const user = await userCollection.findOne({ email });
+        const isInstructor = classItem.instructorEmail === email;
+        const isAdmin = user?.role === "admin";
+
+        // Check if student is enrolled
+        let isEnrolled = false;
+        if (!isInstructor && !isAdmin) {
+          const enrollment = await enrolledCollection.findOne({
+            userEmail: email,
+            classesId: { $in: [new ObjectId(id)] },
+          });
+          isEnrolled = !!enrollment;
+        }
+
+        if (!isInstructor && !isAdmin && !isEnrolled) {
+          return res.status(403).send({
+            authorized: false,
+            message: "You must be enrolled in this class to access the live session room.",
+          });
+        }
+
+        const cleanTitle = (classItem.name || "LiveClass").replace(/[^a-zA-Z0-9]/g, "");
+        const roomName = `YogaMaster-${cleanTitle}-${id.slice(-6)}`;
+
+        res.send({
+          authorized: true,
+          isInstructor: isInstructor || isAdmin,
+          roomName,
+          classItem,
+        });
+      } catch (err) {
+        console.error("Error retrieving live session:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
+
     //cart Routes !----------
     app.post('/add-to-cart', verifyJWT, async (req, res) => {
       const newCartItem = req.body;
@@ -334,7 +455,8 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     const amount = parseInt(price) * 100;
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
+        currency: 'inr',
+        description: 'Yoga Master Course Enrollment',
         payment_method_types: ['card']
     });
     res.send({
@@ -553,6 +675,66 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
                 const email = req.params.email;
                 const result = await appliedCollection.findOne({email});
                 res.send(result);
+            });
+
+            // ! REVIEWS & FEEDBACK ROUTES
+            // Get all reviews for a class
+            app.get('/reviews/:classId', async (req, res) => {
+              try {
+                const classId = req.params.classId;
+                const reviews = await reviewsCollection
+                  .find({ classId: classId })
+                  .sort({ date: -1 })
+                  .toArray();
+                res.send(reviews);
+              } catch (err) {
+                console.warn("Error fetching reviews:", err.message);
+                res.send([]);
+              }
+            });
+
+            // Add or update review for a class
+            app.post('/add-review', verifyJWT, async (req, res) => {
+              try {
+                const { classId, rating, comment, userName, userPhoto } = req.body;
+                const userEmail = req.decoded.email;
+
+                if (!classId || !rating || !comment) {
+                  return res.status(400).send({ error: true, message: "Class ID, rating, and feedback comment are required" });
+                }
+
+                // Check enrollment status for verified student badge
+                let isVerified = false;
+                try {
+                  if (ObjectId.isValid(classId)) {
+                    const enrolled = await enrolledCollection.findOne({
+                      userEmail: userEmail,
+                      classesId: { $in: [new ObjectId(classId)] }
+                    });
+                    if (enrolled) isVerified = true;
+                  }
+                } catch (e) {}
+
+                const query = { classId: classId, userEmail: userEmail };
+                const updateDoc = {
+                  $set: {
+                    classId,
+                    userEmail,
+                    userName: userName || userEmail.split('@')[0],
+                    userPhoto: userPhoto || null,
+                    rating: Math.min(5, Math.max(1, Number(rating))),
+                    comment: comment.trim(),
+                    isVerified,
+                    date: new Date()
+                  }
+                };
+
+                const result = await reviewsCollection.updateOne(query, updateDoc, { upsert: true });
+                res.send({ success: true, result });
+              } catch (err) {
+                console.error("Error submitting review:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
             });
   
 
