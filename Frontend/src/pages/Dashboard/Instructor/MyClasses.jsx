@@ -16,7 +16,8 @@ import {
   FiClock,
   FiXCircle,
   FiX,
-  FiLayers
+  FiLayers,
+  FiRadio
 } from 'react-icons/fi'
 import useUser from '../../../hooks/useUser'
 import useAxiosSecure from '../../../hooks/useAxiosSecure'
@@ -424,6 +425,18 @@ const MyClasses = ({ filterStatus = 'all' }) => {
                       <FiEdit3 className="w-3.5 h-3.5" />
                       <span>Edit</span>
                     </button>
+
+                    {/* Go Live Studio Button for Approved Classes */}
+                    {cls.status === 'approved' && (
+                      <Link
+                        to={`/dashboard/live-class/${cls._id}`}
+                        title="Start Live Studio Session (Up to 50 Yogis)"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-coral hover:bg-red-600 rounded-btn transition-colors shadow-sm"
+                      >
+                        <FiRadio className="w-3.5 h-3.5" />
+                        <span>{cls.liveStatus === 'live' ? 'Live Now' : 'Go Live'}</span>
+                      </Link>
+                    )}
                   </div>
 
                   {/* DELETE BUTTON */}
