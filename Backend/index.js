@@ -108,7 +108,7 @@ async function run() {
           const email = req.decoded.email;
           const query = { email: email };
           const user = await userCollection.findOne(query);
-          if (user.role === 'instructor' || user.role === 'admin') {
+          if (user && (user.role === 'instructor' || user.role === 'admin')) {
               next()
           }
           else {
@@ -272,6 +272,40 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       res.send(result);
     });
 
+    // Delete a class (instructor can delete their own class, admin can delete any)
+    const deleteClassHandler = async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: true, message: "Invalid class ID" });
+        }
+
+        const email = req.decoded.email;
+        const user = await userCollection.findOne({ email: email });
+
+        let query = { _id: new ObjectId(id) };
+        // If not admin, ensure instructor can only delete their own class
+        if (user?.role !== "admin") {
+          query.instructorEmail = email;
+        }
+
+        const result = await classesCollection.deleteOne(query);
+        if (result.deletedCount > 0) {
+          // Clean up any cart items referencing this deleted class
+          await cartCollection.deleteMany({ classId: id });
+          res.send(result);
+        } else {
+          res.status(404).send({ error: true, message: "Class not found or you are not authorized to delete it" });
+        }
+      } catch (err) {
+        console.error("Error deleting class:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    };
+
+    app.delete("/delete-class/:id", verifyJWT, verifyInstructor, deleteClassHandler);
+    app.delete("/class/:id", verifyJWT, verifyInstructor, deleteClassHandler);
+
     //cart Routes !----------
     app.post('/add-to-cart', verifyJWT, async (req, res) => {
       const newCartItem = req.body;
@@ -334,7 +368,8 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     const amount = parseInt(price) * 100;
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
+        currency: 'inr',
+        description: 'Yoga Master Course Enrollment',
         payment_method_types: ['card']
     });
     res.send({

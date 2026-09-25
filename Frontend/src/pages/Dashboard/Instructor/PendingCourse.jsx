@@ -1,9 +1,8 @@
 import React from 'react'
+import MyClasses from './MyClasses'
 
 const PendingCourse = () => {
-  return (
-    <div className='my-10'>PendingCourse</div>
-  )
+  return <MyClasses filterStatus="pending" />
 }
 
 export default PendingCourse

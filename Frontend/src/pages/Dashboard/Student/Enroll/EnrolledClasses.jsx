@@ -38,7 +38,7 @@ const EnrolledClasses = () => {
                 <p>{item.classes.instructorName}</p>
               </div>
                  <div className='flex gap-5'>
-                  <p className='font-bold text-gray-500'>${item.classes.price}</p>
+                  <p className='font-bold text-gray-500'>₹{item.classes.price}</p>
                   <Link to={`/dashboard/course-details`}><button className='px-3 py-1 mr-5 font-bold text-white shadow-md rounded-xl bg-secondary'>
                     View
                   </button></Link>

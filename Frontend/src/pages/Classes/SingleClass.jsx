@@ -223,7 +223,7 @@ const SingleClass = () => {
           <img src="/play.png" alt="Play" />
         </div>
       </a>
-      <h3>${course.price}</h3>
+      <h3>₹{course.price}</h3>
       <button
         onClick={() => handleSelect(course._id)}
         title={
@@ -335,7 +335,7 @@ const SingleClass = () => {
               <iconify-icon icon="heroicons:star-20-solid" className="text-tertiary"></iconify-icon>
             </div>
             <div className="mb-1 font-semibold text-black">Greatest Passion In...</div>
-            <span className="font-semibold text-secondary">$38.00</span>
+            <span className="font-semibold text-secondary">₹499.00</span>
           </div>
         </li>
 
@@ -351,7 +351,7 @@ const SingleClass = () => {
           </div>
           <div className="flex-1">
             <div className="mb-1 font-semibold text-black">Greatest Passion In...</div>
-            <span className="font-semibold text-secondary">$38.00</span>
+            <span className="font-semibold text-secondary">₹499.00</span>
           </div>
         </li>
 
@@ -367,7 +367,7 @@ const SingleClass = () => {
           </div>
           <div className="flex-1">
             <div className="mb-1 font-semibold text-black">Greatest Passion In...</div>
-            <span className="font-semibold text-secondary">$38.00</span>
+            <span className="font-semibold text-secondary">₹499.00</span>
           </div>
         </li>
       </ul>
