@@ -70,11 +70,14 @@ const MyClasses = () => {
             </h1>
           </div>
 
-          {/* Second Column: "......" and Price Info */}
+          {/* Second Column: Class Details */}
           <div>
-            <h1 className="mb-3 font-bold">......</h1>
+            <h1 className="mb-3 font-bold">Details:</h1>
             <h1 className="my-2 text-secondary">
-              <span className="text-black">Price</span> : {cls.Price}{" "}
+              <span className="text-black">Level</span> : {cls.level || "Beginner"}
+            </h1>
+            <h1 className="my-2 text-secondary">
+              <span className="text-black">Price</span> : {cls.price ?? cls.Price}{" "}
               <span className="text-black">$</span>
             </h1>
             <h1 className="my-2 text-secondary">
@@ -85,6 +88,15 @@ const MyClasses = () => {
                   : "Not Get Data"}
               </span>
             </h1>
+            {cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {cls.categories.map((cat, i) => (
+                  <span key={i} className="text-[10px] bg-teal-50 text-teal font-semibold px-2 py-0.5 rounded-full border border-teal/20">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Third Column: Action Buttons */}

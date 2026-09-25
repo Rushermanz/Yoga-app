@@ -79,6 +79,7 @@ const ManageClasses = () => {
               <tr className="bg-bg-base text-xs text-text-secondary uppercase tracking-wide border-b border-border-ui">
                 <th className="px-5 py-3 text-left font-semibold">Class</th>
                 <th className="px-5 py-3 text-left font-semibold">Instructor</th>
+                <th className="px-5 py-3 text-left font-semibold">Category & Level</th>
                 <th className="px-5 py-3 text-left font-semibold">Status</th>
                 <th className="px-5 py-3 text-left font-semibold">Actions</th>
               </tr>
@@ -86,7 +87,7 @@ const ManageClasses = () => {
             <tbody className="divide-y divide-border-ui">
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-text-secondary text-sm">
+                  <td colSpan={5} className="text-center py-12 text-text-secondary text-sm">
                     <p className="text-3xl mb-2">📚</p>
                     No classes found.
                   </td>
@@ -108,6 +109,24 @@ const ManageClasses = () => {
                         </div>
                       </td>
                       <td className="px-5 py-3 text-text-secondary text-xs">{cls.instructorName || '—'}</td>
+                      <td className="px-5 py-3 text-xs">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-text-primary">
+                            {cls.level || 'Beginner'}
+                          </span>
+                          {cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[180px]">
+                              {cls.categories.map((cat, i) => (
+                                <span key={i} className="text-[10px] bg-teal-50 text-teal font-medium px-1.5 py-0.5 rounded border border-teal/20">
+                                  {cat}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-text-secondary text-[11px]">—</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-5 py-3">
                         <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${status.cls}`}>
                           {status.label}

@@ -81,6 +81,18 @@ const SingleClass = () => {
               />
             </div>
 
+            {/* Category and Level tags */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="text-xs font-bold bg-teal-100 text-teal px-3 py-1 rounded-full">
+                {course?.level || 'Beginner'}
+              </span>
+              {course?.categories && Array.isArray(course.categories) && course.categories.map((cat, i) => (
+                <span key={i} className="text-xs font-semibold bg-gray-100 text-gray-700 px-3 py-1 rounded-full border border-gray-200">
+                  {cat}
+                </span>
+              ))}
+            </div>
+
             <h2 className="mb-2 text-2xl">{course?.name}</h2>
 
             <div className="flex items-center mt-6 space-x-5 space-y-5 author-meta sm:lg:space-x-16 sm:space-y-0">
@@ -193,7 +205,7 @@ const SingleClass = () => {
                   </p>
 
                   <div className="bg-[#F8F8F8] dark:bg-indigo-500 space-y-6 p-8 rounded-md my-8">
-                    <h4 className="text-2xl">This Course is for Beginners</h4>
+                    <h4 className="text-2xl">This Course is for {course?.level || "Beginners"}</h4>
                   </div>
 
                   <div>
@@ -223,7 +235,7 @@ const SingleClass = () => {
           <img src="/play.png" alt="Play" />
         </div>
       </a>
-      <h3>${course.price}</h3>
+      <h3>${course.price ?? course.Price ?? 0}</h3>
       <button
         onClick={() => handleSelect(course._id)}
         title={
@@ -246,6 +258,22 @@ const SingleClass = () => {
           </div>
           <div className="flex-none">{course.instructorName}</div>
         </li>
+
+        {course?.categories && Array.isArray(course.categories) && course.categories.length > 0 && (
+          <li className="flex space-x-3 border-b border-[#ECECEC] mb-4 pb-4 last:pb-0 last:mb-0 last:border-0">
+            <div className="flex items-center flex-1 space-x-3">
+              <GiClassicalKnowledge />
+              <div className="font-semibold text-black">Categories</div>
+            </div>
+            <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+              {course.categories.map((cat, i) => (
+                <span key={i} className="text-xs bg-teal-50 text-teal font-semibold px-2 py-0.5 rounded-full border border-teal/20">
+                  {cat}
+                </span>
+              ))}
+            </div>
+          </li>
+        )}
 
         <li className="flex space-x-3 border-b border-[#ECECEC] mb-4 pb-4 last:pb-0 last:mb-0 last:border-0">
           <div className="flex items-center flex-1 space-x-3">
@@ -276,7 +304,7 @@ const SingleClass = () => {
             <FaLevelUpAlt />
             <div className="font-semibold text-black">Course Level</div>
           </div>
-          <div className="flex-none">Intermediate</div>
+          <div className="flex-none">{course?.level || "Beginner"}</div>
         </li>
 
         <li className="flex space-x-3 border-b border-[#ECECEC] mb-4 pb-4 last:pb-0 last:mb-0 last:border-0">

@@ -19,6 +19,11 @@ const PopularClasses = () => {
     fetchClasses()
   }, [])
 
+  const filteredClasses = classes.filter(cls => {
+    if (active === 'All') return true
+    return Array.isArray(cls.categories) ? cls.categories.includes(active) : cls.category === active
+  })
+
   return (
     <section className="py-20 bg-bg-base">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6">
@@ -54,15 +59,15 @@ const PopularClasses = () => {
         </div>
 
         {/* Cards grid */}
-        {classes.length === 0 ? (
+        {filteredClasses.length === 0 ? (
           <div className="text-center py-16 text-text-secondary">
             <p className="text-4xl mb-3">🧘</p>
-            <p className="font-semibold text-text-primary mb-1">No classes available yet</p>
-            <p className="text-sm">Check back soon — more content is being added.</p>
+            <p className="font-semibold text-text-primary mb-1">No classes found</p>
+            <p className="text-sm">Try selecting another category or explore all classes.</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {classes.slice(0, 6).map((item, index) => (
+            {filteredClasses.slice(0, 6).map((item, index) => (
               <Card key={index} item={item} />
             ))}
           </div>

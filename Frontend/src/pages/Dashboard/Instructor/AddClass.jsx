@@ -4,15 +4,31 @@ import useUser from '../../../hooks/useUser';
 
 
     const KEY = import.meta.env.VITE_IMG_TOKEN
+const AVAILABLE_CATEGORIES = ['Strength', 'Mobility', 'Flexibility', 'Beginner', 'Recovery', 'Posture', 'Core', 'Balance'];
+
 const AddClass = () => {
     
     const API_URL = `https://api.imgbb.com/1/upload?key=${KEY}&name`
     const axiosSecure = useAxiosSecure();
     const {currentUser, isLoading} = useUser();
     const [image, setImage] = useState(null);
+    const [selectedCategories, setSelectedCategories] = useState(['Beginner']);
+    const [selectedLevel, setSelectedLevel] = useState('Beginner');
+
+    const handleCategoryToggle = (category) => {
+        setSelectedCategories(prev => 
+            prev.includes(category) 
+                ? prev.filter(c => c !== category)
+                : [...prev, category]
+        );
+    };
     
     const handleFormSubmit =(e) =>{
         e.preventDefault();
+        if (selectedCategories.length === 0) {
+            alert('Please select at least one category.');
+            return;
+        }
         const formData = new FormData(e.target);
         // console.log(formData);
         const newData = Object.fromEntries(formData);
@@ -33,6 +49,9 @@ const AddClass = () => {
                 newData.status = 'pending';
                 newData.submitted = new Date();
                 newData.totalEnrolled = 0;
+                newData.level = selectedLevel;
+                newData.categories = selectedCategories;
+                newData.price = newData.Price;
                 axiosSecure.post('/new-class', newData).then(res => {
                     alert('successfully added class!');
                     console.log(res.data);
@@ -101,7 +120,48 @@ const AddClass = () => {
                 <label className='block mb-2 font-bold text-gray-700' htmlFor="price">Price</label>
                 <input className='w-full px-4 py-2 border rounded-md border-secondary focus:outline-none focus:ring-blue-500' type="number" required placeholder='How much it cost?' name="Price" />
                 </div>
-                  
+            </div>
+
+            <div className='grid items-start w-full grid-cols-1 md:grid-cols-2 gap-3'>
+                <div className='mb-6'>
+                    <label className='block mb-2 font-bold text-gray-700' htmlFor="level">Course Level</label>
+                    <select
+                        id="level"
+                        name="level"
+                        value={selectedLevel}
+                        onChange={(e) => setSelectedLevel(e.target.value)}
+                        className='w-full px-4 py-2 border rounded-md border-secondary focus:outline-none focus:ring-blue-500 bg-white'
+                    >
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <div className='mb-6'>
+                    <label className='block mb-2 font-bold text-gray-700'>
+                        Categories <span className='text-xs font-normal text-secondary'>({selectedCategories.length} selected)</span>
+                    </label>
+                    <div className='flex flex-wrap gap-2 pt-1'>
+                        {AVAILABLE_CATEGORIES.map(category => {
+                            const isChecked = selectedCategories.includes(category);
+                            return (
+                                <button
+                                    key={category}
+                                    type="button"
+                                    onClick={() => handleCategoryToggle(category)}
+                                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                                        isChecked 
+                                            ? 'bg-secondary text-white border-secondary shadow-sm' 
+                                            : 'bg-gray-50 text-gray-700 border-gray-300 hover:border-secondary'
+                                    }`}
+                                >
+                                    {isChecked ? `✓ ${category}` : `+ ${category}`}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
             
             <div className='mb-6'>

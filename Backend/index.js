@@ -193,8 +193,28 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
     app.get("/classes", async (req, res) => {
       try {
-        const query = { status: "approved" };
-        const result = await classesCollection.find().toArray();
+        const { category, categories, level } = req.query;
+        let query = {};
+
+        // Parse single or multiple category query parameters
+        const rawCategories = categories || category;
+        let catList = [];
+        if (Array.isArray(rawCategories)) {
+          catList = rawCategories.filter(c => c && c !== 'All');
+        } else if (typeof rawCategories === 'string' && rawCategories !== 'All') {
+          catList = rawCategories.split(',').map(c => c.trim()).filter(c => c && c !== 'All');
+        }
+
+        if (catList.length === 1) {
+          query.categories = catList[0];
+        } else if (catList.length > 1) {
+          query.categories = { $in: catList };
+        }
+
+        if (level && level !== 'All levels') {
+          query.level = level;
+        }
+        const result = await classesCollection.find(query).toArray();
         res.send(result);
       } catch (err) {
         console.warn("/classes query fallback:", err.message);
@@ -266,6 +286,8 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
           availableSeats: parseInt(updateClass.availableSeats),
           videoLink: updateClass.videoLink,
           status: "pending",
+          ...(updateClass.level && { level: updateClass.level }),
+          ...(updateClass.categories && { categories: updateClass.categories }),
         },
       };
       const result = await classesCollection.updateOne(filter, updateDoc, options);

@@ -20,7 +20,7 @@ const Classes = () => {
   const [classes, setClasses] = useState([])
   const [enrolledClasses, setEnrolledClasses] = useState([])
   const [search, setSearch] = useState('')
-  const [activeCategory, setActiveCategory] = useState('All')
+  const [selectedCategories, setSelectedCategories] = useState([])
   const [activeDiff, setActiveDiff] = useState('All levels')
   const axiosFetch = useAxiosFetch()
   const axiosSecure = useAxiosSecure()
@@ -33,11 +33,39 @@ const Classes = () => {
       .catch(() => {})
   }, [])
 
+  const handleCategoryClick = (chip) => {
+    if (chip === 'All') {
+      setSelectedCategories([])
+      return
+    }
+    setSelectedCategories(prev =>
+      prev.includes(chip)
+        ? prev.filter(c => c !== chip)
+        : [...prev, chip]
+    )
+  }
+
+  const handleResetFilters = () => {
+    setSelectedCategories([])
+    setActiveDiff('All levels')
+    setSearch('')
+  }
+
   const filtered = classes.filter(cls => {
     const matchSearch = cls.name?.toLowerCase().includes(search.toLowerCase()) ||
                         cls.instructorName?.toLowerCase().includes(search.toLowerCase())
     const matchDiff = activeDiff === 'All levels' || cls.level === activeDiff
-    return matchSearch && matchDiff
+    
+    // Multi-category OR filtering: match if class belongs to any selected category
+    let matchCat = true
+    if (selectedCategories.length > 0) {
+      const classCats = Array.isArray(cls.categories)
+        ? cls.categories
+        : (cls.category ? [cls.category] : [])
+      matchCat = selectedCategories.some(cat => classCats.includes(cat))
+    }
+
+    return matchSearch && matchDiff && matchCat
   })
 
   const handleSelect = (id) => {
@@ -95,20 +123,40 @@ const Classes = () => {
         {/* Filter row */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           {/* Category chips */}
-          <div className="flex flex-wrap gap-2 flex-1">
-            {categoryChips.map(chip => (
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            {categoryChips.map(chip => {
+              const isAll = chip === 'All'
+              const isSelected = isAll
+                ? selectedCategories.length === 0
+                : selectedCategories.includes(chip)
+
+              return (
+                <button
+                  key={chip}
+                  onClick={() => handleCategoryClick(chip)}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all duration-150 inline-flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-teal text-white border-teal shadow-sm'
+                      : 'bg-white text-text-secondary border-border-ui hover:border-teal/50 hover:text-teal'
+                  }`}
+                >
+                  {!isAll && (
+                    <span className="text-[11px] font-bold leading-none">
+                      {isSelected ? '✓' : ''}
+                    </span>
+                  )}
+                  {chip}
+                </button>
+              )
+            })}
+            {(selectedCategories.length > 0 || activeDiff !== 'All levels' || search) && (
               <button
-                key={chip}
-                onClick={() => setActiveCategory(chip)}
-                className={`text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all duration-150 ${
-                  activeCategory === chip
-                    ? 'bg-teal text-white border-teal'
-                    : 'bg-white text-text-secondary border-border-ui hover:border-teal/50 hover:text-teal'
-                }`}
+                onClick={handleResetFilters}
+                className="text-xs font-semibold text-text-secondary hover:text-teal px-2 py-1 transition-colors underline"
               >
-                {chip}
+                Reset filters
               </button>
-            ))}
+            )}
           </div>
           {/* Difficulty filter */}
           <select
@@ -125,7 +173,15 @@ const Classes = () => {
           <div className="text-center py-20">
             <p className="text-4xl mb-3">🔍</p>
             <p className="font-semibold text-text-primary mb-1">No classes match your search</p>
-            <p className="text-sm text-text-secondary">Try different filters or a broader search term.</p>
+            <p className="text-sm text-text-secondary mb-4">Try different filters or a broader search term.</p>
+            {(selectedCategories.length > 0 || activeDiff !== 'All levels' || search) && (
+              <button
+                onClick={handleResetFilters}
+                className="text-xs font-bold text-teal hover:underline px-4 py-2 border border-teal/30 rounded-btn hover:bg-teal/10 transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -158,11 +214,23 @@ const Classes = () => {
                   {/* Body */}
                   <div className="p-4 flex flex-col flex-1">
                     <h3 className="text-sm font-bold text-text-primary mb-0.5 line-clamp-2">{cls.name}</h3>
-                    <p className="text-xs text-text-secondary mb-3">{cls.instructorName}</p>
+                    <p className="text-xs text-text-secondary mb-2">{cls.instructorName}</p>
+
+                    {/* Category badges */}
+                    {cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {cls.categories.map((cat, i) => (
+                          <span key={i} className="text-[10px] font-semibold bg-teal-50 text-teal px-2 py-0.5 rounded-full border border-teal/20">
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-3 text-xs text-text-secondary mb-4">
                       <span>{cls.availableSeats} seats left</span>
                       <span className="ml-auto font-bold text-text-primary">
-                        {cls.price === 0 ? 'Free' : `$${cls.price}`}
+                        {(cls.price ?? cls.Price) === 0 ? 'Free' : `$${cls.price ?? cls.Price ?? 0}`}
                       </span>
                     </div>
                     <div className="flex gap-2 mt-auto">
