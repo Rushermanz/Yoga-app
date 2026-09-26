@@ -94,28 +94,34 @@ async function run() {
     
         // Verify admin
         const verifyAdmin = async (req, res, next) => {
-          const email = req.decoded.email;
-          const query = { email: email };
+          const email = req.decoded?.email;
+          if (!email) {
+            return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+          }
+          const query = { email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } };
           const user = await userCollection.findOne(query);
-          if (user.role === 'admin') {
-              next()
+          const role = user?.role ? String(user.role).trim().toLowerCase() : '';
+          if (role === 'admin') {
+            next();
+          } else {
+            return res.status(403).send({ error: true, message: 'Forbidden: Admin access required' });
           }
-          else {
-              return res.status(401).send({ error: true, message: 'Unauthorize access' })
-          }
-      }
+        };
 
-      const verifyInstructor = async (req, res, next) => {
-          const email = req.decoded.email;
-          const query = { email: email };
+        const verifyInstructor = async (req, res, next) => {
+          const email = req.decoded?.email;
+          if (!email) {
+            return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+          }
+          const query = { email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } };
           const user = await userCollection.findOne(query);
-          if (user && (user.role === 'instructor' || user.role === 'admin')) {
-              next()
+          const role = user?.role ? String(user.role).trim().toLowerCase() : '';
+          if (role === 'instructor' || role === 'admin') {
+            next();
+          } else {
+            return res.status(403).send({ error: true, message: 'Forbidden: Instructor access required' });
           }
-          else {
-              return res.status(401).send({ error: true, message: 'Unauthorize access' })
-          }
-      }
+        };
 
 
     
