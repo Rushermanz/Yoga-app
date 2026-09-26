@@ -54,12 +54,45 @@ const AdminHome = () => {
         </Link>
       </div>
 
+      {/* Pending instructor application alert if any */}
+      {(stats?.pendingApplications > 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-card p-4 flex items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl flex-shrink-0">
+              📋
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-900">
+                {stats.pendingApplications} Instructor {stats.pendingApplications === 1 ? 'Application' : 'Applications'} Awaiting Review
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Prospective instructors have submitted credentials for your approval.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/manage-applications"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-btn transition-colors whitespace-nowrap shadow-sm"
+          >
+            Review Applications →
+          </Link>
+        </div>
+      )}
+
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard label="Registered users"    value={users?.length}         color="text-navy"    bg="bg-teal-100"    icon="👥" />
         <MetricCard label="Active instructors"  value={stats?.instructors}    color="text-blue-ai" bg="bg-blue-ai-100" icon="🎓" />
         <MetricCard label="Approved classes"    value={stats?.approvedClasses} color="text-teal"   bg="bg-teal-100"    icon="✅" />
-        <MetricCard label="Pending approvals"   value={stats?.pendingClasses} color="text-coral"   bg="bg-coral-100"   icon="⏳" />
+        <Link to="/dashboard/manage-applications" className="block hover:scale-[1.01] transition-transform">
+          <MetricCard 
+            label="Instructor applications" 
+            value={stats?.pendingApplications !== undefined ? `${stats?.pendingApplications} pending` : '—'} 
+            color="text-amber-600" 
+            bg="bg-amber-100" 
+            icon="📝" 
+          />
+        </Link>
       </div>
 
       {/* Users table preview */}

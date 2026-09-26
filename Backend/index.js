@@ -703,24 +703,29 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
   
         // Admins stats 
         app.get('/admin-stats', verifyJWT, verifyAdmin, async (req, res) => {
-          // Get approved classes and pending classes and instructors 
-          const approvedClasses = (await classesCollection.find({ status: 'approved' }).toArray()).length;
-          const pendingClasses = (await classesCollection.find({ status: 'pending' }).toArray()).length;
-          const instructors = (await userCollection.find({ role: 'instructor' }).toArray()).length;
-          const totalClasses = (await classesCollection.find().toArray()).length;
-          const totalEnrolled = (await enrolledCollection.find().toArray()).length;
-          // const totalRevenue = await paymentCollection.find().toArray();
-          // const totalRevenueAmount = totalRevenue.reduce((total, current) => total + parseInt(current.price), 0);
-          const result = {
-              approvedClasses,
-              pendingClasses,
-              instructors,
-              totalClasses,
-              totalEnrolled,
-              // totalRevenueAmount
+          try {
+            // Get approved classes and pending classes and instructors 
+            const approvedClasses = (await classesCollection.find({ status: 'approved' }).toArray()).length;
+            const pendingClasses = (await classesCollection.find({ status: 'pending' }).toArray()).length;
+            const instructors = (await userCollection.find({ role: 'instructor' }).toArray()).length;
+            const totalClasses = (await classesCollection.find().toArray()).length;
+            const totalEnrolled = (await enrolledCollection.find().toArray()).length;
+            const pendingApplications = (await appliedCollection.find({ status: { $in: ['pending', null, undefined] } }).toArray()).length;
+            const totalApplications = (await appliedCollection.find().toArray()).length;
+            const result = {
+                approvedClasses,
+                pendingClasses,
+                instructors,
+                totalClasses,
+                totalEnrolled,
+                pendingApplications,
+                totalApplications,
+            }
+            res.send(result);
+          } catch (err) {
+            console.error('Error fetching admin stats:', err);
+            res.status(500).send({ error: true, message: err.message });
           }
-          res.send(result);
-
       })
 
               // !GET ALL INSTrUCTOR  
@@ -784,16 +789,178 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
             
             
             
-            // Applied route 
+            // Applied instructor routes
+            app.get('/applied-instructors', verifyJWT, verifyAdmin, async (req, res) => {
+                try {
+                    const applications = await appliedCollection.find().sort({ submittedAt: -1, _id: -1 }).toArray();
+                    // Enrich with user profile info (photo, phone, current role)
+                    const enriched = await Promise.all(applications.map(async (appDoc) => {
+                        const user = await userCollection.findOne({ 
+                            email: { $regex: new RegExp(`^${(appDoc.email || '').trim()}$`, 'i') } 
+                        });
+                        return {
+                            ...appDoc,
+                            status: appDoc.status || 'pending',
+                            userPhoto: user?.photoURL || user?.photoUrl || null,
+                            userPhone: user?.phone || appDoc.phone || null,
+                            currentRole: user?.role || 'user',
+                            userAddress: user?.address || null,
+                            skills: user?.skills || appDoc.skills || null
+                        };
+                    }));
+                    res.send(enriched);
+                } catch (err) {
+                    console.error('Error fetching instructor applications:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
+            });
+
+            app.get('/applied-instructors/:email', async (req, res) => {
+                try {
+                    const email = req.params.email;
+                    const result = await appliedCollection.findOne({ 
+                        email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } 
+                    });
+                    if (result && !result.status) {
+                        result.status = 'pending';
+                    }
+                    res.send(result || {});
+                } catch (err) {
+                    console.error('Error fetching applicant status:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
+            });
+
             app.post('/as-instructor', async (req, res) => {
-                const data = req.body;
-                const result = await appliedCollection.insertOne(data);
-                res.send(result);
-            })
-            app.get('/applied-instructors/:email',   async (req, res) => {
-                const email = req.params.email;
-                const result = await appliedCollection.findOne({email});
-                res.send(result);
+                try {
+                    const data = req.body;
+                    const cleanEmail = (data.email || '').trim().toLowerCase();
+                    if (!cleanEmail) {
+                        return res.status(400).send({ error: true, message: 'Email is required' });
+                    }
+
+                    // Check if already an instructor
+                    const user = await userCollection.findOne({ email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') } });
+                    if (user?.role === 'instructor') {
+                        return res.status(400).send({ error: true, message: 'You are already an active instructor!' });
+                    }
+
+                    const existing = await appliedCollection.findOne({ email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') } });
+                    if (existing && (!existing.status || existing.status === 'pending')) {
+                        return res.status(400).send({ error: true, message: 'Your application is already pending review.' });
+                    }
+
+                    if (existing && existing.status === 'rejected') {
+                        // Re-apply
+                        const result = await appliedCollection.updateOne(
+                            { _id: existing._id },
+                            { 
+                                $set: { 
+                                    name: data.name || user?.name || 'Applicant',
+                                    experience: data.experience,
+                                    phone: data.phone || user?.phone || '',
+                                    status: 'pending',
+                                    feedback: null,
+                                    submittedAt: new Date()
+                                }
+                            }
+                        );
+                        return res.send({ success: true, message: 'Application re-submitted for review!', result });
+                    }
+
+                    const applicationDoc = {
+                        name: data.name || user?.name || 'Applicant',
+                        email: cleanEmail,
+                        experience: data.experience,
+                        phone: data.phone || user?.phone || '',
+                        status: 'pending',
+                        submittedAt: new Date()
+                    };
+                    const result = await appliedCollection.insertOne(applicationDoc);
+                    res.send({ success: true, message: 'Application submitted successfully!', result });
+                } catch (err) {
+                    console.error('Error submitting instructor application:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
+            });
+
+            app.patch('/applied-instructors/approve/:id', verifyJWT, verifyAdmin, async (req, res) => {
+                try {
+                    const id = req.params.id;
+                    const application = await appliedCollection.findOne({ _id: new ObjectId(id) });
+                    if (!application) {
+                        return res.status(404).send({ error: true, message: 'Application not found' });
+                    }
+
+                    // Update application status
+                    await appliedCollection.updateOne(
+                        { _id: new ObjectId(id) },
+                        { 
+                            $set: { 
+                                status: 'approved', 
+                                reviewedAt: new Date(), 
+                                reviewedBy: req.decoded?.email || 'admin' 
+                            } 
+                        }
+                    );
+
+                    // Update user's role to instructor
+                    const userUpdate = await userCollection.updateOne(
+                        { email: { $regex: new RegExp(`^${(application.email || '').trim()}$`, 'i') } },
+                        { $set: { role: 'instructor' } }
+                    );
+
+                    res.send({ 
+                        success: true, 
+                        message: `Approved! ${application.name || application.email} is now an instructor.`,
+                        userModified: userUpdate.modifiedCount
+                    });
+                } catch (err) {
+                    console.error('Error approving instructor application:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
+            });
+
+            app.patch('/applied-instructors/reject/:id', verifyJWT, verifyAdmin, async (req, res) => {
+                try {
+                    const id = req.params.id;
+                    const { reason } = req.body;
+                    const application = await appliedCollection.findOne({ _id: new ObjectId(id) });
+                    if (!application) {
+                        return res.status(404).send({ error: true, message: 'Application not found' });
+                    }
+
+                    await appliedCollection.updateOne(
+                        { _id: new ObjectId(id) },
+                        { 
+                            $set: { 
+                                status: 'rejected', 
+                                feedback: reason || 'Application not accepted at this time.', 
+                                reviewedAt: new Date(), 
+                                reviewedBy: req.decoded?.email || 'admin' 
+                            } 
+                        }
+                    );
+
+                    res.send({ 
+                        success: true, 
+                        message: 'Application rejected.' 
+                    });
+                } catch (err) {
+                    console.error('Error rejecting instructor application:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
+            });
+
+            app.delete('/applied-instructors/:id', verifyJWT, verifyAdmin, async (req, res) => {
+                try {
+                    const id = req.params.id;
+                    const result = await appliedCollection.deleteOne({ _id: new ObjectId(id) });
+                    res.send({ success: true, message: 'Application deleted', result });
+                } catch (err) {
+                    console.error('Error deleting application:', err);
+                    res.status(500).send({ error: true, message: err.message });
+                }
             });
 
             // ! REVIEWS & FEEDBACK ROUTES

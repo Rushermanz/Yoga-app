@@ -24,6 +24,7 @@ import AdminHome from "../pages/Dashboard/Admin/AdminHome";
 import ManageClasses from "../pages/Dashboard/Admin/ManageClasses";
 import ManageUsers from "../pages/Dashboard/Admin/ManageUsers";
 import UpdateUser from "../pages/Dashboard/Admin/UpdateUser";
+import ManageApplications from "../pages/Dashboard/Admin/ManageApplications";
 import LiveClassRoom from "../pages/Dashboard/LiveClass/LiveClassRoom";
 
 
@@ -160,6 +161,10 @@ export const router = createBrowserRouter([
       {
         path: "manage-users",
         element: <ManageUsers />
+      },
+      {
+        path: "manage-applications",
+        element: <ManageApplications />
       },
       {
         path: "update-user/:id",

@@ -9,11 +9,12 @@ import { HashLoader } from 'react-spinners'
 // ── Nav items per role ──────────────────────────────────────
 // ── Nav items per role ──────────────────────────────────────
 const adminNavItems = [
-  { to: '/dashboard/admin-home',     label: 'Overview',        icon: IconGrid },
-  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
-  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
-  { to: '/dashboard/manage-users',   label: 'Users',           icon: IconUsers },
-  { to: '/dashboard/manage-class',   label: 'Classes',         icon: IconBook },
+  { to: '/dashboard/admin-home',          label: 'Overview',        icon: IconGrid },
+  { to: '/dashboard/explore-classes',     label: 'Explore Classes', icon: IconCompass },
+  { to: '/dashboard/instructors',         label: 'Instructors',     icon: IconInstructor },
+  { to: '/dashboard/manage-users',        label: 'Users',           icon: IconUsers },
+  { to: '/dashboard/manage-class',        label: 'Classes',         icon: IconBook },
+  { to: '/dashboard/manage-applications', label: 'Applications',    icon: IconBadge },
 ]
 
 const instructorNavItems = [
