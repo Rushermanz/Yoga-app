@@ -9,34 +9,44 @@ import { HashLoader } from 'react-spinners'
 // ── Nav items per role ──────────────────────────────────────
 // ── Nav items per role ──────────────────────────────────────
 const adminNavItems = [
+  { isDivider: true, label: 'Admin Controls' },
   { to: '/dashboard/admin-home',          label: 'Overview',        icon: IconGrid },
-  { to: '/dashboard/explore-classes',     label: 'Explore Classes', icon: IconCompass },
-  { to: '/dashboard/instructors',         label: 'Instructors',     icon: IconInstructor },
   { to: '/dashboard/manage-users',        label: 'Users',           icon: IconUsers },
   { to: '/dashboard/manage-class',        label: 'Classes',         icon: IconBook },
   { to: '/dashboard/manage-applications', label: 'Applications',    icon: IconBadge },
+  { isDivider: true, label: 'Explore & Browse' },
+  { to: '/dashboard/explore-classes',     label: 'Explore Classes', icon: IconCompass },
+  { to: '/dashboard/instructors',         label: 'Instructors',     icon: IconInstructor },
 ]
 
 const instructorNavItems = [
-  { to: '/dashboard/instructor-cp',  label: 'Overview',        icon: IconGrid },
-  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
-  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
-  { to: '/dashboard/add-class',      label: 'Create Class',    icon: IconPlus },
-  { to: '/dashboard/my-classes',     label: 'My Classes',      icon: IconBook },
-  { to: '/dashboard/enrolled-class', label: 'My Training',     icon: IconPlay },
-  { to: '/dashboard/my-selected',    label: 'Saved Classes',   icon: IconBookmark },
-  { to: '/dashboard/my-payments',    label: 'Payment History', icon: IconCard },
+  { isDivider: true, label: 'Teaching' },
+  { to: '/dashboard/instructor-cp',  label: 'Teaching Overview', icon: IconGrid },
+  { to: '/dashboard/add-class',      label: 'Create Class',      icon: IconPlus },
+  { to: '/dashboard/my-classes',     label: 'Manage My Classes', icon: IconBook },
+  { isDivider: true, label: 'My Practice & Learning' },
+  { to: '/dashboard/student-cp',     label: 'Practice Hub',      icon: IconHome },
+  { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
+  { to: '/dashboard/onboarding',     label: 'My Yoga Profile',   icon: IconUser },
+  { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
+  { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
+  { to: '/dashboard/my-payments',    label: 'Payment History',   icon: IconCard },
+  { isDivider: true, label: 'Explore & Community' },
+  { to: '/dashboard/explore-classes',label: 'Explore Classes',   icon: IconCompass },
+  { to: '/dashboard/instructors',    label: 'Instructors',       icon: IconInstructor },
 ]
 
 const studentNavItems = [
-  { to: '/dashboard/student-cp',     label: 'Home',            icon: IconGrid },
-  { to: '/dashboard/recommendations',label: 'Recommendations', icon: IconSparkles },
-  { to: '/dashboard/onboarding',     label: 'My Yoga Profile', icon: IconUser },
-  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
-  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
-  { to: '/dashboard/enrolled-class', label: 'My Training',     icon: IconPlay },
-  { to: '/dashboard/my-selected',    label: 'Saved Classes',   icon: IconBookmark },
-  { to: '/dashboard/my-payments',    label: 'Payments',        icon: IconCard },
+  { isDivider: true, label: 'My Practice & Learning' },
+  { to: '/dashboard/student-cp',     label: 'Home',              icon: IconGrid },
+  { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
+  { to: '/dashboard/onboarding',     label: 'My Yoga Profile',   icon: IconUser },
+  { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
+  { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
+  { to: '/dashboard/my-payments',    label: 'Payments',          icon: IconCard },
+  { isDivider: true, label: 'Explore & Community' },
+  { to: '/dashboard/explore-classes',label: 'Explore Classes',   icon: IconCompass },
+  { to: '/dashboard/instructors',    label: 'Instructors',       icon: IconInstructor },
   { to: '/dashboard/apply-instructor',label: 'Become an Instructor', icon: IconBadge },
 ]
 
@@ -155,13 +165,20 @@ const DashboardLayout = () => {
         )}
 
         {/* Navigation */}
-        {!collapsed && (
-          <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-2">Menu</p>
-        )}
         <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavItem key={item.to} {...item} collapsed={collapsed} />
-          ))}
+          {navItems.map((item, idx) =>
+            item.isDivider ? (
+              !collapsed ? (
+                <div key={idx} className="pt-3 pb-1 px-3 first:pt-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">{item.label}</p>
+                </div>
+              ) : (
+                <div key={idx} className="my-1.5 border-t border-border-ui/60 first:hidden" />
+              )
+            ) : (
+              <NavItem key={item.to} {...item} collapsed={collapsed} />
+            )
+          )}
         </nav>
 
         {/* Bottom links */}

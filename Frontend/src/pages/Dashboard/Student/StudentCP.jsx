@@ -30,29 +30,50 @@ const upcomingAppointment = {
 const StudentCP = () => {
   const { currentUser } = useUser()
   const firstName = currentUser?.name?.split(' ')[0] || 'there'
+  const isInstructor = currentUser?.role === 'instructor'
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-navy">
-            {getGreeting()}, {firstName}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-navy">
+              {getGreeting()}, {firstName}
+            </h1>
+            {isInstructor && (
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-ai-100 text-blue-ai uppercase tracking-wider">
+                Instructor (Practice Mode)
+              </span>
+            )}
+          </div>
           <p className="text-sm text-text-secondary mt-0.5">
-            You're 2 sessions away from this week's target.
+            {isInstructor
+              ? 'Your personal practice space. Track your mat sessions, recommendations, and goals alongside your teaching.'
+              : "You're 2 sessions away from this week's target."}
           </p>
         </div>
-        <Link
-          to="/dashboard/explore-classes"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal hover:bg-teal-600 text-white text-xs font-semibold rounded-btn transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
-          </svg>
-          <span>Explore Classes</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {isInstructor && (
+            <Link
+              to="/dashboard/instructor-cp"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-ai-100 hover:bg-blue-ai/20 text-blue-ai text-xs font-bold rounded-btn transition-colors border border-blue-ai/30 shadow-sm"
+            >
+              <span>🎓</span>
+              <span>Teaching Overview</span>
+            </Link>
+          )}
+          <Link
+            to="/dashboard/explore-classes"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal hover:bg-teal-600 text-white text-xs font-semibold rounded-btn transition-colors shadow-sm"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
+            </svg>
+            <span>Explore Classes</span>
+          </Link>
+        </div>
       </div>
 
       {/* Onboarding Banner / Summary Card */}

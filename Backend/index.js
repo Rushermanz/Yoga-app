@@ -845,12 +845,20 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
               ]
             }).sort({ date: -1 }).toArray();
 
-            // Enrich payments with class names
+            // Collect all unique class IDs across all payments
+            const allPaymentClassIds = [...new Set(payments.flatMap(p => (p.classesId || []).map(id => id ? id.toString() : null)).filter(Boolean))];
+            const allClassDocs = await classesCollection.find({
+              _id: { $in: allPaymentClassIds.map(id => {
+                try { return new ObjectId(id); } catch(e) { return null; }
+              }).filter(Boolean) }
+            }).toArray();
+
+            const classMap = new Map();
+            allClassDocs.forEach(c => classMap.set(c._id.toString(), c.name));
+
             const enriched = payments.map(p => {
-              const matchedClasses = instructorClasses.filter(c =>
-                p.classesId && p.classesId.some(id => id.toString() === c._id.toString())
-              );
-              const classNames = matchedClasses.map(c => c.name).join(', ') || 'Yoga Course';
+              const names = (p.classesId || []).map(id => classMap.get(id.toString())).filter(Boolean);
+              const classNames = names.length > 0 ? names.join(', ') : (p.classNames || 'Yoga Course');
               return {
                 ...p,
                 classNames,
@@ -884,11 +892,19 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
             ]
           }).sort({ date: -1 }).toArray();
 
+          const allPaymentClassIds = [...new Set(payments.flatMap(p => (p.classesId || []).map(id => id ? id.toString() : null)).filter(Boolean))];
+          const allClassDocs = await classesCollection.find({
+            _id: { $in: allPaymentClassIds.map(id => {
+              try { return new ObjectId(id); } catch(e) { return null; }
+            }).filter(Boolean) }
+          }).toArray();
+
+          const classMap = new Map();
+          allClassDocs.forEach(c => classMap.set(c._id.toString(), c.name));
+
           const enriched = payments.map(p => {
-            const matchedClasses = instructorClasses.filter(c =>
-              p.classesId && p.classesId.some(id => id.toString() === c._id.toString())
-            );
-            const classNames = matchedClasses.map(c => c.name).join(', ') || 'Yoga Course';
+            const names = (p.classesId || []).map(id => classMap.get(id.toString())).filter(Boolean);
+            const classNames = names.length > 0 ? names.join(', ') : (p.classNames || 'Yoga Course');
             return {
               ...p,
               classNames,

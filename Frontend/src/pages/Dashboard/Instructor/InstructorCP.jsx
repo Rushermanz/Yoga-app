@@ -60,6 +60,20 @@ const InstructorCP = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
+            to="/dashboard/student-cp"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-teal/40 bg-teal-50 hover:bg-teal-100 text-teal text-xs font-bold rounded-btn transition-colors shadow-sm"
+          >
+            <span>🧘</span>
+            <span>My Practice Hub</span>
+          </Link>
+          <Link
+            to="/dashboard/recommendations"
+            className="inline-flex items-center gap-1.5 px-4 py-2 border border-border-ui bg-white hover:bg-surface-2 text-text-primary text-xs font-semibold rounded-btn transition-colors shadow-sm"
+          >
+            <span>✨</span>
+            <span>Recommendations</span>
+          </Link>
+          <Link
             to="/dashboard/explore-classes"
             className="inline-flex items-center gap-1.5 px-4 py-2 border border-border-ui bg-white hover:bg-surface-2 text-text-primary text-xs font-semibold rounded-btn transition-colors shadow-sm"
           >
@@ -89,6 +103,61 @@ const InstructorCP = () => {
           </Link>
         </div>
       </div>
+
+      {/* Onboarding Banner / Personal Practice Profile Card */}
+      {!currentUser?.onboardingCompleted ? (
+        <div className="bg-gradient-to-r from-navy via-navy-800 to-teal/90 text-white rounded-card p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-teal/30">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal/20 text-teal-100 text-[11px] font-bold uppercase tracking-wider">
+              ✨ Personal Practice & Wellness
+            </div>
+            <h2 className="text-lg font-bold text-white">Complete Your Personal Yoga Profile</h2>
+            <p className="text-xs text-surface-2 max-w-xl">
+              As an instructor, you can set your own personal fitness goals, body metrics, and schedule to get AI class recommendations and track your mat time.
+            </p>
+          </div>
+          <Link
+            to="/dashboard/onboarding"
+            className="px-4 py-2.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-all shadow-md flex-shrink-0 text-center self-start sm:self-auto"
+          >
+            Set Up My Profile
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-teal-100/40 border border-teal/30 rounded-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold text-lg">
+              🧘
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Personal Practice Profile Active</p>
+              <p className="text-sm font-bold text-navy">
+                Goal: {currentUser.onboardingProfile?.primaryGoal} ({currentUser.onboardingProfile?.goalPreference}) · BMI: {currentUser.onboardingProfile?.bmi} ({currentUser.onboardingProfile?.bmiCategory})
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/dashboard/recommendations"
+              className="px-3.5 py-1.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors"
+            >
+              Recommendations
+            </Link>
+            <Link
+              to="/dashboard/student-cp"
+              className="px-3.5 py-1.5 bg-white border border-border-ui hover:border-teal text-navy hover:text-teal text-xs font-bold rounded-btn transition-colors shadow-sm"
+            >
+              Practice Hub
+            </Link>
+            <Link
+              to="/dashboard/onboarding"
+              className="px-3 py-1.5 border border-border-ui hover:border-teal text-xs font-bold text-text-secondary hover:text-teal bg-white rounded-btn transition-colors"
+            >
+              Edit Profile
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -122,16 +191,19 @@ const InstructorCP = () => {
         />
       </div>
 
-      {/* Dual Teaching & Learning Hub */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      {/* Multi Teaching & Learning Hub */}
+      <div className="grid sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-card border border-border-ui p-5 flex flex-col justify-between shadow-sm">
           <div>
-            <h2 className="text-base font-bold text-navy">Teaching & Course Controls</h2>
-            <p className="text-xs text-text-secondary mt-1">
-              Review your classes, track student enrollments, edit details, or host live mass sessions.
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-teal" />
+              <h2 className="text-base font-bold text-navy">Teaching & Courses</h2>
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Review your classes, track student enrollments, edit course details, or start live studio broadcasting.
             </p>
           </div>
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border-ui">
             <Link
               to="/dashboard/my-classes"
               className="text-xs font-bold text-teal hover:text-teal-600 transition-colors inline-flex items-center gap-1"
@@ -150,17 +222,20 @@ const InstructorCP = () => {
 
         <div className="bg-white rounded-card border border-border-ui p-5 flex flex-col justify-between shadow-sm">
           <div>
-            <h2 className="text-base font-bold text-navy">My Learning & Training</h2>
-            <p className="text-xs text-text-secondary mt-1">
-              Practice and learn from fellow coaches. Access classes you enrolled in and practice on your mat.
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-blue-ai" />
+              <h2 className="text-base font-bold text-navy">My Practice & Training</h2>
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Practice and learn from fellow coaches. Access classes you enrolled in and practice on your mat anytime.
             </p>
           </div>
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border-ui">
             <Link
               to="/dashboard/enrolled-class"
               className="text-xs font-bold text-teal hover:text-teal-600 transition-colors inline-flex items-center gap-1"
             >
-              <span>My Enrolled Training</span>
+              <span>Enrolled Training</span>
               <FiArrowRight className="w-3.5 h-3.5" />
             </Link>
             <Link
@@ -168,6 +243,33 @@ const InstructorCP = () => {
               className="text-xs font-bold text-text-secondary hover:text-teal transition-colors"
             >
               Saved Classes
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-card border border-border-ui p-5 flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-coral" />
+              <h2 className="text-base font-bold text-navy">Personalized AI Guidance</h2>
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Explore smart recommendations calibrated for your personal goals and track your weekly session progress.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border-ui">
+            <Link
+              to="/dashboard/recommendations"
+              className="text-xs font-bold text-teal hover:text-teal-600 transition-colors inline-flex items-center gap-1"
+            >
+              <span>AI Recommendations</span>
+              <FiArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              to="/dashboard/student-cp"
+              className="text-xs font-bold text-text-secondary hover:text-teal transition-colors"
+            >
+              Practice Hub
             </Link>
           </div>
         </div>

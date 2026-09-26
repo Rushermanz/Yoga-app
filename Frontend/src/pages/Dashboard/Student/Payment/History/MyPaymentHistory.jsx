@@ -29,6 +29,7 @@ const MyPaymentHistory = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'earnings' | 'purchases'
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -54,11 +55,24 @@ const MyPaymentHistory = () => {
       });
   }, [currentUser?.email, isInstructor]);
 
+  const earningsPayments = payments.filter(p => p.isEarnings !== false);
+  const purchasesPayments = payments.filter(p => p.isEarnings === false);
+  const totalEarnings = earningsPayments.reduce((acc, curr) => acc + (Number(curr.amount) || Number(curr.price) || 0), 0);
+  const totalSpent = purchasesPayments.reduce((acc, curr) => acc + (Number(curr.amount) || Number(curr.price) || 0), 0);
   const totalAmount = payments.reduce((acc, curr) => acc + (Number(curr.amount) || Number(curr.price) || 0), 0);
   const totalClassesCount = payments.reduce((acc, curr) => acc + (curr.classesId?.length || 1), 0);
 
+  // Tab filter
+  const tabFiltered = isInstructor
+    ? payments.filter(p => {
+        if (activeTab === 'earnings') return p.isEarnings !== false;
+        if (activeTab === 'purchases') return p.isEarnings === false;
+        return true;
+      })
+    : payments;
+
   // Search filter
-  const filtered = payments.filter(p => {
+  const filtered = tabFiltered.filter(p => {
     const q = search.toLowerCase();
     const matchTx = p.transactionId?.toLowerCase().includes(q);
     const matchClass = p.classNames?.toLowerCase().includes(q);
@@ -89,7 +103,7 @@ const MyPaymentHistory = () => {
           </h1>
           <p className="text-sm text-text-secondary mt-0.5">
             {isInstructor
-              ? 'Track student enrollments, course payments, and your earnings.'
+              ? 'Track both student enrollments into your courses and classes you enrolled in as a practitioner.'
               : 'Review your enrolled course payments, receipts, and transaction history.'}
           </p>
         </div>
@@ -109,38 +123,104 @@ const MyPaymentHistory = () => {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard
-          label={isInstructor ? "Total Earnings" : "Total Paid"}
-          value={`₹${totalAmount.toLocaleString()}`}
-          color="text-navy"
-          bg="bg-teal-100"
-          icon="💰"
-        />
-        <MetricCard
-          label={isInstructor ? "Enrollment Transactions" : "Completed Payments"}
-          value={payments.length}
-          color="text-blue-ai"
-          bg="bg-blue-ai-100"
-          icon="🧾"
-        />
-        <MetricCard
-          label={isInstructor ? "Avg. Per Enrollment" : "Courses Purchased"}
-          value={
-            isInstructor
-              ? (payments.length ? `₹${Math.round(totalAmount / payments.length)}` : '₹0')
-              : totalClassesCount
-          }
-          color="text-coral"
-          bg="bg-coral-100"
-          icon="📈"
-        />
+        {isInstructor ? (
+          <>
+            <MetricCard
+              label="Teaching Earnings"
+              value={`₹${totalEarnings.toLocaleString()}`}
+              color="text-teal"
+              bg="bg-teal-100"
+              icon="💰"
+            />
+            <MetricCard
+              label="My Course Purchases"
+              value={`₹${totalSpent.toLocaleString()}`}
+              color="text-blue-ai"
+              bg="bg-blue-ai-100"
+              icon="🧘"
+            />
+            <MetricCard
+              label="Total Transactions"
+              value={payments.length}
+              color="text-navy"
+              bg="bg-surface-2"
+              icon="🧾"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              label="Total Paid"
+              value={`₹${totalAmount.toLocaleString()}`}
+              color="text-navy"
+              bg="bg-teal-100"
+              icon="💰"
+            />
+            <MetricCard
+              label="Completed Payments"
+              value={payments.length}
+              color="text-blue-ai"
+              bg="bg-blue-ai-100"
+              icon="🧾"
+            />
+            <MetricCard
+              label="Courses Purchased"
+              value={totalClassesCount}
+              color="text-coral"
+              bg="bg-coral-100"
+              icon="📈"
+            />
+          </>
+        )}
       </div>
+
+      {/* Instructor Filter Tabs */}
+      {isInstructor && (
+        <div className="flex items-center gap-2 border-b border-border-ui pb-2">
+          <button
+            onClick={() => { setActiveTab('all'); setPage(1); }}
+            className={`px-3.5 py-1.5 rounded-btn text-xs font-bold transition-colors ${
+              activeTab === 'all'
+                ? 'bg-teal text-white shadow-sm'
+                : 'text-text-secondary hover:text-navy hover:bg-surface-2'
+            }`}
+          >
+            All Activity ({payments.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('earnings'); setPage(1); }}
+            className={`px-3.5 py-1.5 rounded-btn text-xs font-bold transition-colors ${
+              activeTab === 'earnings'
+                ? 'bg-teal text-white shadow-sm'
+                : 'text-text-secondary hover:text-navy hover:bg-surface-2'
+            }`}
+          >
+            Teaching Earnings ({earningsPayments.length})
+          </button>
+          <button
+            onClick={() => { setActiveTab('purchases'); setPage(1); }}
+            className={`px-3.5 py-1.5 rounded-btn text-xs font-bold transition-colors ${
+              activeTab === 'purchases'
+                ? 'bg-teal text-white shadow-sm'
+                : 'text-text-secondary hover:text-navy hover:bg-surface-2'
+            }`}
+          >
+            My Enrollments / Purchases ({purchasesPayments.length})
+          </button>
+        </div>
+      )}
 
       {/* Transactions Table Card */}
       <div className="bg-white rounded-card border border-border-ui shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-border-ui flex items-center justify-between">
           <p className="text-sm font-bold text-navy">
-            {isInstructor ? 'Received Payments' : 'Payment Records'}
+            {isInstructor
+              ? activeTab === 'earnings'
+                ? 'Teaching Earnings'
+                : activeTab === 'purchases'
+                ? 'My Learning & Course Purchases'
+                : 'All Payment Records'
+              : 'Payment Records'}
           </p>
           <span className="text-xs text-text-secondary font-medium">
             Showing {currentItems.length} of {filtered.length} entries
@@ -206,21 +286,47 @@ const MyPaymentHistory = () => {
                           {startIndex + idx + 1}
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="font-bold text-text-primary text-xs leading-snug">
-                            {payment.classNames || 'Yoga Master Course'}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-text-primary text-xs leading-snug">
+                              {payment.classNames || 'Yoga Master Course'}
+                            </p>
+                            {isInstructor && (
+                              payment.isEarnings !== false ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-600 flex-shrink-0">
+                                  Earning
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-ai-100 text-blue-ai flex-shrink-0">
+                                  Enrolled
+                                </span>
+                              )
+                            )}
+                          </div>
                           <span className="text-[10px] text-text-secondary">
                             {payment.classesId?.length ? `${payment.classesId.length} class item(s)` : '1 class'}
                           </span>
                         </td>
                         {isInstructor && (
                           <td className="px-5 py-3.5">
-                            <p className="font-semibold text-text-primary text-xs">
-                              {payment.userName || 'Student'}
-                            </p>
-                            <p className="text-[10px] text-text-secondary truncate max-w-[150px]">
-                              {payment.userEmail || '—'}
-                            </p>
+                            {payment.isEarnings === false ? (
+                              <div>
+                                <span className="font-semibold text-xs text-blue-ai">
+                                  You (Self Enrollment)
+                                </span>
+                                <p className="text-[10px] text-text-secondary truncate max-w-[150px]">
+                                  {payment.userEmail}
+                                </p>
+                              </div>
+                            ) : (
+                              <div>
+                                <p className="font-semibold text-text-primary text-xs">
+                                  {payment.userName || 'Student'}
+                                </p>
+                                <p className="text-[10px] text-text-secondary truncate max-w-[150px]">
+                                  {payment.userEmail || '—'}
+                                </p>
+                              </div>
+                            )}
                           </td>
                         )}
                         <td className="px-5 py-3.5">
