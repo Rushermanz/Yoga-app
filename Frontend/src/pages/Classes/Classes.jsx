@@ -52,6 +52,9 @@ const Classes = () => {
   }
 
   const filtered = classes.filter(cls => {
+    // Only display approved classes to public
+    if (cls.status !== 'approved') return false
+
     const matchSearch = cls.name?.toLowerCase().includes(search.toLowerCase()) ||
                         cls.instructorName?.toLowerCase().includes(search.toLowerCase())
     const matchDiff = activeDiff === 'All levels' || cls.level === activeDiff

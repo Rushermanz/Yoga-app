@@ -20,6 +20,8 @@ const PopularClasses = () => {
   }, [])
 
   const filteredClasses = classes.filter(cls => {
+    // Only show approved classes to public
+    if (cls.status !== 'approved') return false
     if (active === 'All') return true
     return Array.isArray(cls.categories) ? cls.categories.includes(active) : cls.category === active
   })
