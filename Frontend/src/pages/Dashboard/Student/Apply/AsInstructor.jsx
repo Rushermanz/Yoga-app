@@ -14,7 +14,7 @@ const AsInstructor = () => {
   useEffect(() => {
     axiosFetch.get(`/applied-instructors/${currentUser?.email}`).then(
       res =>{
-        console.log(data)
+        console.log(res.data)
         setSubmittedData(res.data);
         setLoading(false)
       }

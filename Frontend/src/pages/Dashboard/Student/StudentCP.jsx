@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import useUser from '../../../hooks/useUser'
 
 const getGreeting = () => {
@@ -57,10 +58,11 @@ const StudentCP = () => {
               <p className="font-bold text-text-primary">{todayClass.title}</p>
               <p className="text-sm text-text-secondary">{todayClass.duration} min · {todayClass.level} · with {todayClass.instructor}</p>
             </div>
-            <Link to="/dashboard/enrolled-class">
-              <button className="px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors flex-shrink-0">
-                {todayClass.progress > 0 ? 'Resume' : 'Start'}
-              </button>
+            <Link
+              to="/dashboard/enrolled-class"
+              className="px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors flex-shrink-0 inline-block"
+            >
+              {todayClass.progress > 0 ? 'Resume' : 'Start'}
             </Link>
           </div>
           <div className="mt-4 bg-surface-2 rounded-full h-1.5">
