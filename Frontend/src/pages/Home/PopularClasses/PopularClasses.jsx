@@ -3,7 +3,7 @@ import useAxiosFetch from '../../../hooks/useAxiosFetch'
 import Card from './Card'
 import { useNavigate } from 'react-router-dom'
 
-const categoryChips = ['All', 'Strength', 'Mobility', 'Flexibility', 'Beginner', 'Recovery', 'Posture', 'Core', 'Balance']
+const categoryChips = ['All', 'Strength', 'Mobility', 'Flexibility', 'Recovery', 'Posture', 'Core', 'Balance']
 
 const PopularClasses = () => {
   const axiosFetch = useAxiosFetch()

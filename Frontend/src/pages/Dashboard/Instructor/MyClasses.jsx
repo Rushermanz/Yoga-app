@@ -45,12 +45,17 @@ const statusMap = {
   }
 }
 
+const AVAILABLE_CATEGORIES = ['Strength', 'Mobility', 'Flexibility', 'Recovery', 'Posture', 'Core', 'Balance']
+const LEVEL_OPTIONS = ['Beginner', 'Intermediate', 'Advanced']
+
 const MyClasses = ({ filterStatus = 'all' }) => {
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(filterStatus)
   const [deletingId, setDeletingId] = useState(null)
   const [editingClass, setEditingClass] = useState(null)
+  const [editLevel, setEditLevel] = useState('Beginner')
+  const [editCategories, setEditCategories] = useState([])
   const [isUpdating, setIsUpdating] = useState(false)
 
   const { currentUser, isLoading } = useUser()
@@ -76,6 +81,25 @@ const MyClasses = ({ filterStatus = 'all' }) => {
       setLoading(false)
     }
   }, [currentUser?.email, isLoading])
+
+  // Sync edit form state when editingClass changes
+  useEffect(() => {
+    if (editingClass) {
+      setEditLevel(editingClass.level || 'Beginner')
+      const cats = Array.isArray(editingClass.categories)
+        ? editingClass.categories.filter((c) => c !== 'Beginner')
+        : (editingClass.category && editingClass.category !== 'Beginner' ? [editingClass.category] : [])
+      setEditCategories(cats)
+    }
+  }, [editingClass])
+
+  const handleEditCategoryToggle = (category) => {
+    setEditCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    )
+  }
 
   // Handle class deletion
   const handleDeleteClass = (cls) => {
@@ -156,6 +180,16 @@ const MyClasses = ({ filterStatus = 'all' }) => {
     e.preventDefault()
     if (!editingClass) return
 
+    if (editCategories.length === 0) {
+      Swal.fire({
+        title: 'Category Required',
+        text: 'Please select at least one category for your course.',
+        icon: 'warning',
+        confirmButtonColor: '#12B8A6'
+      })
+      return
+    }
+
     setIsUpdating(true)
     const formData = new FormData(e.target)
     const updateData = {
@@ -163,7 +197,9 @@ const MyClasses = ({ filterStatus = 'all' }) => {
       price: Number(formData.get('price')),
       availableSeats: parseInt(formData.get('availableSeats'), 10),
       videoLink: formData.get('videoLink'),
-      description: formData.get('description')
+      description: formData.get('description'),
+      level: editLevel,
+      categories: editCategories
     }
 
     try {
@@ -353,14 +389,14 @@ const MyClasses = ({ filterStatus = 'all' }) => {
                     </h2>
 
                     {/* Level and Category Badges */}
-                    {(cls.level || (cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0)) && (
+                    {(cls.level || (cls.categories && Array.isArray(cls.categories) && cls.categories.filter((cat) => cat !== 'Beginner').length > 0)) && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {cls.level && (
                           <span className="text-[10px] font-bold bg-teal-100 text-teal px-2 py-0.5 rounded-full">
                             {cls.level}
                           </span>
                         )}
-                        {cls.categories && Array.isArray(cls.categories) && cls.categories.map((cat, i) => (
+                        {cls.categories && Array.isArray(cls.categories) && cls.categories.filter((cat) => cat !== 'Beginner').map((cat, i) => (
                           <span key={i} className="text-[10px] bg-teal-50 text-teal font-semibold px-2 py-0.5 rounded-full border border-teal/20">
                             {cat}
                           </span>
@@ -539,17 +575,67 @@ const MyClasses = ({ filterStatus = 'all' }) => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-text-primary mb-1" htmlFor="edit-course-level">
+                    Course Level
+                  </label>
+                  <select
+                    id="edit-course-level"
+                    name="level"
+                    value={editLevel}
+                    onChange={(e) => setEditLevel(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-border-ui rounded-btn focus:outline-none focus:border-teal bg-white"
+                  >
+                    {LEVEL_OPTIONS.map((lvl) => (
+                      <option key={lvl} value={lvl}>
+                        {lvl}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-text-primary mb-1">
+                    YouTube Video Link
+                  </label>
+                  <input
+                    type="text"
+                    name="videoLink"
+                    defaultValue={editingClass.videoLink || ''}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="w-full px-3 py-2 text-sm border border-border-ui rounded-btn focus:outline-none focus:border-teal"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-text-primary mb-1">
-                  YouTube Video Link
-                </label>
-                <input
-                  type="text"
-                  name="videoLink"
-                  defaultValue={editingClass.videoLink || ''}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full px-3 py-2 text-sm border border-border-ui rounded-btn focus:outline-none focus:border-teal"
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-text-primary">
+                    Categories
+                  </label>
+                  <span className="text-[11px] font-medium text-teal">
+                    {editCategories.length} selected
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 p-2.5 bg-surface-2/60 rounded-btn border border-border-ui/80">
+                  {AVAILABLE_CATEGORIES.map((category) => {
+                    const isChecked = editCategories.includes(category)
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => handleEditCategoryToggle(category)}
+                        className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
+                          isChecked
+                            ? 'bg-teal text-white border-teal shadow-xs'
+                            : 'bg-white text-text-secondary border-border-ui hover:border-teal hover:text-text-primary'
+                        }`}
+                      >
+                        {isChecked ? `✓ ${category}` : `+ ${category}`}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>

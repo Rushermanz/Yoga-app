@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import useAxiosFetch from '../../hooks/useAxiosFetch'
 import { useNavigate } from 'react-router-dom'
 
-const specialties = ['Mobility', 'Strength', 'Flexibility', 'Posture', 'Recovery', 'Core', 'Balance', 'Beginner']
+const specialties = ['Mobility', 'Strength', 'Flexibility', 'Posture', 'Recovery', 'Core', 'Balance']
 
 const Instructor = () => {
   const [instructors, setInstructors] = useState([])

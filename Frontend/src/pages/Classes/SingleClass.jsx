@@ -303,7 +303,7 @@ const SingleClass = () => {
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${difficultyBadge[courseLevel] || difficultyBadge.Beginner}`}>
               {courseLevel}
             </span>
-            {course?.categories && Array.isArray(course.categories) && course.categories.map((cat, i) => (
+            {course?.categories && Array.isArray(course.categories) && course.categories.filter((cat) => cat !== 'Beginner').map((cat, i) => (
               <span key={i} className="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/10">
                 {cat}
               </span>
@@ -999,11 +999,11 @@ const SingleClass = () => {
                     <span className="text-text-secondary flex items-center gap-1.5"><FaAward className="text-teal" /> Difficulty</span>
                     <span className="font-semibold text-navy">{courseLevel}</span>
                   </li>
-                  {course?.categories && Array.isArray(course.categories) && course.categories.length > 0 && (
+                  {course?.categories && Array.isArray(course.categories) && course.categories.filter((cat) => cat !== 'Beginner').length > 0 && (
                     <li className="flex justify-between py-1 border-b border-border-ui/60">
                       <span className="text-text-secondary flex items-center gap-1.5"><FaAward className="text-teal" /> Categories</span>
                       <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
-                        {course.categories.map((cat, i) => (
+                        {course.categories.filter((cat) => cat !== 'Beginner').map((cat, i) => (
                           <span key={i} className="text-[10px] bg-teal-50 text-teal font-semibold px-2 py-0.5 rounded-full border border-teal/20">
                             {cat}
                           </span>

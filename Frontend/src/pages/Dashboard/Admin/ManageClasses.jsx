@@ -114,9 +114,9 @@ const ManageClasses = () => {
                           <span className="font-semibold text-text-primary">
                             {cls.level || 'Beginner'}
                           </span>
-                          {cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0 ? (
+                          {cls.categories && Array.isArray(cls.categories) && cls.categories.filter((cat) => cat !== 'Beginner').length > 0 ? (
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
-                              {cls.categories.map((cat, i) => (
+                              {cls.categories.filter((cat) => cat !== 'Beginner').map((cat, i) => (
                                 <span key={i} className="text-[10px] bg-teal-50 text-teal font-medium px-1.5 py-0.5 rounded border border-teal/20">
                                   {cat}
                                 </span>

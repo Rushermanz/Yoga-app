@@ -4,7 +4,7 @@ import useUser from '../../../hooks/useUser';
 
 
     const KEY = import.meta.env.VITE_IMG_TOKEN
-const AVAILABLE_CATEGORIES = ['Strength', 'Mobility', 'Flexibility', 'Beginner', 'Recovery', 'Posture', 'Core', 'Balance'];
+const AVAILABLE_CATEGORIES = ['Strength', 'Mobility', 'Flexibility', 'Recovery', 'Posture', 'Core', 'Balance'];
 
 const AddClass = () => {
     
@@ -12,7 +12,7 @@ const AddClass = () => {
     const axiosSecure = useAxiosSecure();
     const {currentUser, isLoading} = useUser();
     const [image, setImage] = useState(null);
-    const [selectedCategories, setSelectedCategories] = useState(['Beginner']);
+    const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedLevel, setSelectedLevel] = useState('Beginner');
 
     const handleCategoryToggle = (category) => {

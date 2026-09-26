@@ -279,6 +279,10 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const updateClass = req.body;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
+      const cleanCategories = Array.isArray(updateClass.categories)
+        ? updateClass.categories.filter((c) => c !== "Beginner")
+        : updateClass.categories;
+
       const updateDoc = {
         $set: {
           name: updateClass.name,
@@ -288,7 +292,11 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
           videoLink: updateClass.videoLink,
           status: "pending",
           ...(updateClass.level && { level: updateClass.level }),
-          ...(updateClass.categories && { categories: updateClass.categories }),
+          ...(cleanCategories && {
+            categories: cleanCategories,
+            ...(cleanCategories.length > 0 && { category: cleanCategories[0] })
+          }),
+          ...(updateClass.price !== undefined && { Price: updateClass.price }),
         },
       };
       const result = await classesCollection.updateOne(filter, updateDoc, options);

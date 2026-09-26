@@ -6,7 +6,7 @@ import useUser from '../../hooks/useUser'
 import useAxiosFetch from '../../hooks/useAxiosFetch'
 import useAxiosSecure from '../../hooks/useAxiosSecure'
 
-const categoryChips = ['All', 'Strength', 'Mobility', 'Flexibility', 'Beginner', 'Recovery', 'Posture', 'Core', 'Balance']
+const categoryChips = ['All', 'Strength', 'Mobility', 'Flexibility', 'Recovery', 'Posture', 'Core', 'Balance']
 const difficultyOptions = ['All levels', 'Beginner', 'Intermediate', 'Advanced']
 
 const difficultyBadge = {
@@ -217,9 +217,9 @@ const Classes = () => {
                     <p className="text-xs text-text-secondary mb-2">{cls.instructorName}</p>
 
                     {/* Category badges */}
-                    {cls.categories && Array.isArray(cls.categories) && cls.categories.length > 0 && (
+                    {cls.categories && Array.isArray(cls.categories) && cls.categories.filter((cat) => cat !== 'Beginner').length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {cls.categories.map((cat, i) => (
+                        {cls.categories.filter((cat) => cat !== 'Beginner').map((cat, i) => (
                           <span key={i} className="text-[10px] font-semibold bg-teal-50 text-teal px-2 py-0.5 rounded-full border border-teal/20">
                             {cat}
                           </span>

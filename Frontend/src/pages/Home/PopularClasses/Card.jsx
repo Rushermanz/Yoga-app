@@ -36,16 +36,16 @@ const Card = ({ item }) => {
         <h3 className="text-sm font-bold text-text-primary mb-1 line-clamp-2">{name}</h3>
 
         {/* Categories */}
-        {categories && Array.isArray(categories) && categories.length > 0 && (
+        {categories && Array.isArray(categories) && categories.filter((cat) => cat !== 'Beginner').length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
-            {categories.slice(0, 3).map((cat, i) => (
+            {categories.filter((cat) => cat !== 'Beginner').slice(0, 3).map((cat, i) => (
               <span key={i} className="text-[10px] font-semibold bg-teal-50 text-teal px-2 py-0.5 rounded-full border border-teal/20">
                 {cat}
               </span>
             ))}
-            {categories.length > 3 && (
+            {categories.filter((cat) => cat !== 'Beginner').length > 3 && (
               <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                +{categories.length - 3}
+                +{categories.filter((cat) => cat !== 'Beginner').length - 3}
               </span>
             )}
           </div>
