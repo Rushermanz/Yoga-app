@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import useAuth from '../../../hooks/useAuth'
+import AIAssistantModal from '../../../components/AIAssistant/AIAssistantModal'
 
 // Animated product-preview card shown on the right side of the hero
 const PreviewCard = ({ children, className = '' }) => (
@@ -11,6 +13,8 @@ const PreviewCard = ({ children, className = '' }) => (
 
 const Hero = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false)
 
   return (
     <section
@@ -56,12 +60,27 @@ const Hero = () => {
               >
                 Start Your Yoga Journey
               </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center px-5 py-3 bg-white/10 text-white font-semibold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
-              >
-                Already registered? Sign In
-              </Link>
+              {!user ? (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center px-5 py-3 bg-white/10 text-white font-semibold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
+                >
+                  Already registered? Sign In
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsAIAssistantOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-ai/20 text-white font-semibold rounded-btn border border-blue-ai/40 hover:bg-blue-ai/30 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none shadow-sm hover:shadow-lg hover:shadow-blue-ai/20 group"
+                >
+                  <span className="w-5 h-5 rounded-full bg-blue-ai flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" />
+                    </svg>
+                  </span>
+                  <span>Try our AI Assistant</span>
+                </button>
+              )}
               <Link
                 to="/classes"
                 className="inline-flex items-center justify-center px-4 py-3 text-white/80 hover:text-white transition-colors duration-200 text-sm cursor-pointer select-none underline-offset-4 hover:underline"
@@ -152,19 +171,37 @@ const Hero = () => {
               </PreviewCard>
 
               {/* AI Coach pill */}
-              <PreviewCard className="p-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-ai flex items-center justify-center flex-shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" />
-                  </svg>
-                </div>
-                <p className="text-sm text-text-primary"><span className="font-bold">AI Coach:</span> <span className="text-text-secondary">Recommended because you're working on mobility.</span></p>
-              </PreviewCard>
+              <div
+                onClick={() => setIsAIAssistantOpen(true)}
+                className="cursor-pointer group"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && setIsAIAssistantOpen(true)}
+              >
+                <PreviewCard className="p-3 flex items-center gap-3 group-hover:border-blue-ai/40 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-blue-ai flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-text-primary"><span className="font-bold">AI Coach:</span> <span className="text-text-secondary">Recommended because you're working on mobility.</span></p>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-ai bg-blue-ai-100 px-2 py-0.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity">
+                    Chat
+                  </span>
+                </PreviewCard>
+              </div>
 
             </div>
           </motion.div>
         </div>
       </div>
+
+      <AIAssistantModal
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
+      />
     </section>
   )
 }

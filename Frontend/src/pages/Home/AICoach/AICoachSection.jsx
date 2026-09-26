@@ -1,9 +1,11 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import useAuth from '../../../hooks/useAuth'
 
 const AICoachSection = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const prompts = [
     "What should I train today?",
@@ -12,8 +14,12 @@ const AICoachSection = () => {
     "Recommend something for beginners.",
   ]
 
+  const handleOpenAssistant = (promptText = '') => {
+    window.dispatchEvent(new CustomEvent('open-ai-assistant', { detail: { prompt: promptText } }))
+  }
+
   return (
-    <section className="py-20 bg-navy">
+    <section id="ai-coach" className="py-20 bg-navy scroll-mt-16">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
@@ -35,7 +41,7 @@ const AICoachSection = () => {
                 <p className="text-sm font-bold text-white">Yoga Master AI</p>
                 <p className="text-xs text-white/50">Training help when you need it.</p>
               </div>
-              <div className="ml-auto w-2 h-2 bg-teal rounded-full"></div>
+              <div className="ml-auto w-2 h-2 bg-teal rounded-full animate-pulse"></div>
             </div>
 
             {/* Chat messages */}
@@ -68,8 +74,16 @@ const AICoachSection = () => {
             {/* Suggested prompts */}
             <div className="flex flex-wrap gap-2 pt-3 border-t border-white/10">
               {prompts.map((p) => (
-                <button key={p} className="text-xs px-2.5 py-1.5 bg-white/5 border border-white/15 text-white/70 rounded-full hover:bg-white/10 hover:text-white transition-all duration-150">
-                  {p}
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => handleOpenAssistant(p)}
+                  className="text-xs px-2.5 py-1.5 bg-white/5 border border-white/15 text-white/70 rounded-full hover:bg-white/15 hover:text-white hover:border-blue-ai/50 transition-all duration-150 cursor-pointer flex items-center gap-1 group"
+                >
+                  <span>{p}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
               ))}
             </div>
@@ -112,12 +126,25 @@ const AICoachSection = () => {
                 </li>
               ))}
             </ul>
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center px-6 py-3 bg-blue-ai text-white font-bold rounded-btn hover:bg-blue-600 transition-all duration-200 text-sm cursor-pointer select-none"
-            >
-              Try the AI Coach
-            </Link>
+            {user ? (
+              <button
+                type="button"
+                onClick={() => handleOpenAssistant('What should I train today?')}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-ai text-white font-bold rounded-btn hover:bg-blue-600 transition-all duration-200 text-sm cursor-pointer select-none shadow-lg shadow-blue-ai/25 group"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="group-hover:rotate-12 transition-transform">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                </svg>
+                <span>Try our AI Assistant</span>
+              </button>
+            ) : (
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center px-6 py-3 bg-blue-ai text-white font-bold rounded-btn hover:bg-blue-600 transition-all duration-200 text-sm cursor-pointer select-none"
+              >
+                Try the AI Coach
+              </Link>
+            )}
           </motion.div>
         </div>
       </div>
