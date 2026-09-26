@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import GoogleLogin from '../../components/headers/Social/GoogleLogin'
 import useAuth from '../../hooks/useAuth'
+import { getOnboardingDraft, syncOnboardingDraft } from '../../ultilities/onboardingSync'
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -9,6 +11,7 @@ const Login = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { login, error, setError, setLoader } = useAuth()
+  const hasOnboardingDraft = !!getOnboardingDraft()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -19,8 +22,29 @@ const Login = () => {
     const { email, password } = Object.fromEntries(data)
 
     login(email, password)
-      .then(() => {
-        navigate(location.state?.from || '/dashboard')
+      .then(async (userCredential) => {
+        const user = userCredential?.user
+        let token = localStorage.getItem('token')
+        if (!token && user?.email) {
+          try {
+            const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+              email: user.email,
+              name: user.displayName || user.email.split('@')[0]
+            })
+            token = tokenRes.data?.token
+            if (token) localStorage.setItem('token', token)
+          } catch (e) {
+            console.error('Failed to get token during login:', e)
+          }
+        }
+
+        const draft = getOnboardingDraft()
+        if (draft && token) {
+          await syncOnboardingDraft(token)
+          navigate('/dashboard/recommendations')
+        } else {
+          navigate(location.state?.from || '/dashboard')
+        }
       })
       .catch((err) => {
         setError(err.code)
@@ -44,7 +68,14 @@ const Login = () => {
           </Link>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-1 tracking-tight">Welcome back</h1>
-          <p className="text-sm text-text-secondary mb-8">Sign in to continue your training.</p>
+          <p className="text-sm text-text-secondary mb-6">Sign in to continue your training.</p>
+
+          {hasOnboardingDraft && (
+            <div className="mb-4 p-3 bg-teal-100/60 border border-teal/40 rounded-lg text-xs text-navy font-semibold flex items-center gap-2">
+              <span className="text-sm">✨</span>
+              <span>Your onboarding answers are saved! Sign in to view your personalized class recommendations.</span>
+            </div>
+          )}
 
         {error && (
           <div className="mb-4 px-4 py-3 bg-error/10 border border-error/30 rounded-lg text-sm text-error font-medium">
@@ -122,7 +153,7 @@ const Login = () => {
 
         <p className="text-sm text-text-secondary text-center mt-6">
           Don't have an account?{' '}
-          <Link to="/register" className="font-bold text-teal hover:text-teal-600 transition-colors">
+          <Link to="/onboarding" className="font-bold text-teal hover:text-teal-600 transition-colors">
             Get started
           </Link>
         </p>

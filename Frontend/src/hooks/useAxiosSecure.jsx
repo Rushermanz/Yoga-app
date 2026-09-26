@@ -26,7 +26,10 @@ const useAxiosSecure = () => {
     const responseInterceptor = axiosSecure.interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.response && error.response.status === 401) {
+        // Only redirect to /login on 401 if we are NOT already on a public page
+        const publicPaths = ['/login', '/register', '/onboarding']
+        const isPublicPage = publicPaths.some((p) => window.location.pathname.startsWith(p))
+        if (error.response && error.response.status === 401 && !isPublicPage) {
           try {
             if (typeof logout === 'function') {
               await logout()

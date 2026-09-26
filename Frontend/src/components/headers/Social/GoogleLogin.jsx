@@ -2,16 +2,15 @@ import { FcGoogle } from "react-icons/fc";
 import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getOnboardingDraft, syncOnboardingDraft } from "../../../ultilities/onboardingSync";
 
 
 const GoogleLogin = () => {
     const {googleLogin} = useAuth()
     const navigate = useNavigate()
     const handleLogin = () =>{
-        // console.log('googleLogin')
-        googleLogin().then((userCredential) => {
+        googleLogin().then(async (userCredential) => {
             const user = userCredential.user;
-            console.log(user)
             if(user){
                 const userImp = {
                     name: user?.displayName,
@@ -24,12 +23,30 @@ const GoogleLogin = () => {
                 };
                 
                 if(user.email && user.displayName){
-                    return axios.post('http://localhost:5000/new-user', userImp).then(() =>{
-                        navigate('/');
-                        return "Registration Sucessfull"
-                    }).catch((err) =>{
-                        throw new Error(err);
-                    })
+                    try {
+                        await axios.post('http://localhost:5000/new-user', userImp);
+                    } catch (e) {
+                        // User might already exist in MongoDB
+                    }
+
+                    // Obtain token
+                    let token = localStorage.getItem('token');
+                    try {
+                        const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+                            email: user.email,
+                            name: user.displayName
+                        });
+                        token = tokenRes.data?.token;
+                        if (token) localStorage.setItem('token', token);
+                    } catch (e) {}
+
+                    const draft = getOnboardingDraft();
+                    if (draft && token) {
+                        await syncOnboardingDraft(token);
+                        navigate('/dashboard/recommendations');
+                    } else {
+                        navigate('/dashboard');
+                    }
                 }
             }
             

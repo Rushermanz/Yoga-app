@@ -1,10 +1,11 @@
 import React, { useContext } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import GoogleLogin from '../../components/headers/Social/GoogleLogin'
 import { AuthContext } from '../../ultilities/providers/AuthProvider'
 import axios from 'axios'
 import { updateProfile } from 'firebase/auth'
+import { getOnboardingDraft, syncOnboardingDraft } from '../../ultilities/onboardingSync'
 
 const inputClass =
   'w-full px-4 py-2.5 text-sm border border-border-ui rounded-btn focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal transition-all bg-white'
@@ -24,7 +25,9 @@ const friendlyError = (code) => {
 
 const Register = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { signUp, error, setError } = useContext(AuthContext)
+  const hasOnboardingDraft = !!getOnboardingDraft() || !!location.state?.fromOnboarding
   const {
     register,
     handleSubmit,
@@ -51,8 +54,27 @@ const Register = () => {
           address: data.address,
         }
         await axios.post('http://localhost:5000/new-user', userPayload)
-        setError('')
-        navigate('/')
+
+        // Get authentication token and store in localStorage
+        const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+          email: user.email,
+          name: user.displayName
+        })
+        const token = tokenRes.data?.token
+        if (token) {
+          localStorage.setItem('token', token)
+        }
+
+        // If pre-registration onboarding answers exist, persist them to MongoDB
+        const draft = getOnboardingDraft()
+        if (draft && token) {
+          await syncOnboardingDraft(token)
+          setError('')
+          navigate('/dashboard/recommendations')
+        } else {
+          setError('')
+          navigate('/dashboard')
+        }
       }
     } catch (err) {
       console.error('Registration error:', err)
@@ -104,6 +126,13 @@ const Register = () => {
 
           <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-1 tracking-tight">Create your account</h1>
           <p className="text-sm text-text-secondary mb-4">Get started in under 2 minutes.</p>
+
+          {hasOnboardingDraft && (
+            <div className="mb-4 p-3 bg-teal-100/60 border border-teal/40 rounded-lg text-xs text-navy font-semibold flex items-center gap-2">
+              <span className="text-sm">✨</span>
+              <span>Your onboarding answers are saved! Finish creating your account to view your personalized class recommendations.</span>
+            </div>
+          )}
 
           {error && (
             <div className="mb-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
@@ -237,6 +266,13 @@ const Register = () => {
             Already have an account?{' '}
             <Link to="/login" className="font-bold text-teal hover:text-teal-600 transition-colors">
               Sign in
+            </Link>
+          </p>
+
+          <p className="text-xs text-text-secondary text-center mt-2">
+            Want custom class recommendations first?{' '}
+            <Link to="/onboarding" className="font-semibold text-teal hover:text-teal-600 transition-colors">
+              Take the 1-min Assessment
             </Link>
           </p>
         </div>

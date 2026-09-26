@@ -55,7 +55,55 @@ const StudentCP = () => {
         </Link>
       </div>
 
-      {/* Top row */}
+      {/* Onboarding Banner / Summary Card */}
+      {!currentUser?.onboardingCompleted ? (
+        <div className="bg-gradient-to-r from-navy via-navy-800 to-teal/90 text-white rounded-card p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-teal/30">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal/20 text-teal-100 text-[11px] font-bold uppercase tracking-wider">
+              ✨ Personalize Your Experience
+            </div>
+            <h2 className="text-lg font-bold text-white">Complete Your Yoga Onboarding</h2>
+            <p className="text-xs text-surface-2 max-w-xl">
+              Tell us your fitness goals, body type, and daily schedule to get personalized class recommendations and automatic BMI calculations.
+            </p>
+          </div>
+          <Link
+            to="/dashboard/onboarding"
+            className="px-4 py-2.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-all shadow-md flex-shrink-0 text-center self-start sm:self-auto"
+          >
+            Start Onboarding
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-teal-100/40 border border-teal/30 rounded-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold text-lg">
+              🧘
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Personalized Profile Active</p>
+              <p className="text-sm font-bold text-navy">
+                Goal: {currentUser.onboardingProfile?.primaryGoal} ({currentUser.onboardingProfile?.goalPreference}) · BMI: {currentUser.onboardingProfile?.bmi} ({currentUser.onboardingProfile?.bmiCategory})
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/dashboard/recommendations"
+              className="px-3.5 py-1.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors"
+            >
+              View Recommendations
+            </Link>
+            <Link
+              to="/dashboard/onboarding"
+              className="px-3 py-1.5 border border-border-ui hover:border-teal text-xs font-bold text-navy hover:text-teal bg-white rounded-btn transition-colors"
+            >
+              Edit Profile
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-3 gap-4">
         {/* Today's Plan */}
         <div className="md:col-span-2 bg-white rounded-card border border-border-ui p-5">

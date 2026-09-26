@@ -4,7 +4,7 @@ import Footer from "../pages/Home/Footer/Footer"
 
 const MainLayout = () => {
   const location = useLocation()
-  const isAuthPage = ['/login', '/register'].includes(location.pathname)
+  const isAuthPage = ['/login', '/register', '/onboarding'].includes(location.pathname)
 
   return (
     <main className='overflow-hidden dark:bg-black'>

@@ -48,17 +48,23 @@ const Hero = () => {
               Yoga classes, personal coaching, and smart training plans built around your goals and schedule.
             </p>
 
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                to="/register"
+                to="/onboarding"
                 id="hero-get-started"
                 className="inline-flex items-center justify-center px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm cursor-pointer select-none"
               >
-                Get Started
+                Start Your Yoga Journey
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center px-5 py-3 bg-white/10 text-white font-semibold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
+              >
+                Already registered? Sign In
               </Link>
               <Link
                 to="/classes"
-                className="inline-flex items-center justify-center px-6 py-3 bg-white/10 text-white font-bold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
+                className="inline-flex items-center justify-center px-4 py-3 text-white/80 hover:text-white transition-colors duration-200 text-sm cursor-pointer select-none underline-offset-4 hover:underline"
               >
                 Explore Classes
               </Link>

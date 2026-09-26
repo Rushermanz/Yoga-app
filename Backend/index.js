@@ -189,7 +189,284 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     res.send(result);
 })
 
+    // ── ONBOARDING & RECOMMENDATIONS HELPERS & ROUTES ──────────
+    const calculateBMI = (height, heightUnit, weight, weightUnit) => {
+      let hInM = 0;
+      let wInKg = 0;
 
+      if (heightUnit === 'ft') {
+        if (typeof height === 'object' && height !== null) {
+          const ft = Number(height.ft) || 0;
+          const inch = Number(height.in) || 0;
+          const totalInches = ft * 12 + inch;
+          hInM = totalInches * 0.0254;
+        } else {
+          hInM = Number(height) * 0.3048;
+        }
+      } else {
+        hInM = Number(height) / 100;
+      }
+
+      if (weightUnit === 'lbs') {
+        wInKg = Number(weight) * 0.45359237;
+      } else {
+        wInKg = Number(weight);
+      }
+
+      if (!hInM || hInM <= 0 || !wInKg || wInKg <= 0) {
+        return { bmi: 0, bmiCategory: 'Normal weight', heightCm: 0, weightKg: 0 };
+      }
+
+      const heightCm = Math.round(hInM * 100);
+      const weightKg = Math.round(wInKg * 10) / 10;
+      const bmiVal = wInKg / (hInM * hInM);
+      const bmi = Math.round(bmiVal * 10) / 10;
+
+      let bmiCategory = 'Normal weight';
+      if (bmi < 18.5) bmiCategory = 'Underweight';
+      else if (bmi < 25) bmiCategory = 'Normal weight';
+      else if (bmi < 30) bmiCategory = 'Overweight';
+      else bmiCategory = 'Obese';
+
+      return { bmi, bmiCategory, heightCm, weightKg };
+    };
+
+    // Save Onboarding Profile to MongoDB users collection
+    app.post('/api/onboarding', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded?.email;
+        if (!userEmail) {
+          return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+        }
+
+        const {
+          age,
+          gender,
+          bodyType,
+          primaryGoal,
+          goalPreference,
+          bodyFat,
+          diet,
+          waterIntake,
+          height,
+          heightUnit,
+          weight,
+          weightUnit,
+          targetWeight,
+          preferredDuration
+        } = req.body;
+
+        if (!age || !gender || !bodyType || !primaryGoal || !goalPreference || !bodyFat || !diet || !waterIntake || !height || !weight || !preferredDuration) {
+          return res.status(400).send({ error: true, message: 'Missing required onboarding profile fields' });
+        }
+
+        // Recalculate BMI on the backend before saving to MongoDB
+        const { bmi, bmiCategory, heightCm, weightKg } = calculateBMI(height, heightUnit || 'cm', weight, weightUnit || 'kg');
+
+        const onboardingProfile = {
+          age,
+          gender,
+          bodyType,
+          primaryGoal,
+          goalPreference,
+          bodyFat,
+          diet,
+          waterIntake,
+          height,
+          heightUnit: heightUnit || 'cm',
+          weight,
+          weightUnit: weightUnit || 'kg',
+          targetWeight: targetWeight || weight,
+          preferredDuration: Number(preferredDuration) || 30,
+          heightCm,
+          weightKg,
+          bmi,
+          bmiCategory,
+          updatedAt: new Date()
+        };
+
+        const filter = { email: { $regex: new RegExp(`^${userEmail.trim()}$`, 'i') } };
+        const updateDoc = {
+          $set: {
+            onboardingProfile,
+            onboardingCompleted: true
+          }
+        };
+
+        // Try to update existing user; retry up to 3 times in case /new-user hasn't completed yet (race condition)
+        let result;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          result = await userCollection.updateOne(filter, updateDoc);
+          if (result.matchedCount > 0) break;
+          // User not found yet – wait 400ms and retry (handles /new-user async race condition)
+          if (attempt < 2) await new Promise(r => setTimeout(r, 400));
+        }
+
+        // If user still not found after retries, upsert with email field to avoid losing data
+        if (!result || result.matchedCount === 0) {
+          result = await userCollection.updateOne(
+            filter,
+            { $set: { email: userEmail.trim(), onboardingProfile, onboardingCompleted: true } },
+            { upsert: true }
+          );
+        }
+
+        res.send({ success: true, onboardingProfile, result });
+      } catch (err) {
+        console.error("Error updating onboarding profile:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
+
+
+    // Get User Onboarding Status
+    app.get('/api/user/onboarding', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded?.email;
+        if (!userEmail) {
+          return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+        }
+
+        const user = await userCollection.findOne({ email: { $regex: new RegExp(`^${userEmail.trim()}$`, 'i') } });
+        if (!user) {
+          return res.status(404).send({ error: true, message: 'User not found' });
+        }
+
+        res.send({
+          onboardingCompleted: !!user.onboardingCompleted,
+          onboardingProfile: user.onboardingProfile || null
+        });
+      } catch (err) {
+        console.error("Error fetching onboarding data:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
+
+    // Recommendation Engine: Dynamic weighted scoring using collected profile & existing class metadata
+    app.get('/api/recommendations', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded?.email;
+        if (!userEmail) {
+          return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+        }
+
+        const user = await userCollection.findOne({ email: { $regex: new RegExp(`^${userEmail.trim()}$`, 'i') } });
+
+        // If user has not completed onboarding, return clean response (Requirement 7)
+        if (!user || !user.onboardingCompleted || !user.onboardingProfile) {
+          return res.send({
+            completed: false,
+            message: 'Onboarding has not been completed yet.',
+            recommendations: []
+          });
+        }
+
+        const profile = user.onboardingProfile;
+        const classes = await classesCollection.find({ status: 'approved' }).toArray();
+
+        const scoredClasses = classes.map(cls => {
+          let score = 55; // Base score
+          const matchReasons = [];
+
+          const text = `${cls.name || ''} ${cls.description || ''} ${cls.focus || ''} ${cls.category || ''} ${(Array.isArray(cls.categories) ? cls.categories.join(' ') : (cls.categories || ''))} ${(Array.isArray(cls.tags) ? cls.tags.join(' ') : (cls.tags || ''))}`.toLowerCase();
+
+          // 1. Primary Goal Matching
+          const goal = (profile.primaryGoal || '').toLowerCase();
+          const goalPref = (profile.goalPreference || '').toLowerCase();
+
+          if (goal.includes('lose weight') || goal.includes('weight')) {
+            if (text.includes('weight') || text.includes('burn') || text.includes('cardio') || text.includes('active') || text.includes('vinyasa') || text.includes('flow') || text.includes('fat') || text.includes('mobility')) {
+              score += 20;
+              matchReasons.push('Optimized for weight management & active flow');
+            }
+          } else if (goal.includes('muscle') || goal.includes('gain')) {
+            if (text.includes('power') || text.includes('strength') || text.includes('core') || text.includes('sculpt') || text.includes('tone') || text.includes('building') || text.includes('hatha')) {
+              score += 20;
+              matchReasons.push('Targets core strength & body sculpting');
+            }
+          } else if (goal.includes('shredded') || goal.includes('shred')) {
+            if (text.includes('power') || text.includes('intense') || text.includes('core') || text.includes('vinyasa') || text.includes('workout') || text.includes('cross') || text.includes('beach')) {
+              score += 20;
+              matchReasons.push('High-intensity session for muscle definition');
+            }
+          }
+
+          // Goal/Body Preference match
+          if (goalPref && text.includes(goalPref)) {
+            score += 10;
+            matchReasons.push(`Matches body preference: ${profile.goalPreference}`);
+          }
+
+          // 2. Preferred Duration Matching
+          const userDur = Number(profile.preferredDuration) || 30;
+          const classDur = Number(cls.duration) || 30;
+          const durDiff = Math.abs(userDur - classDur);
+
+          if (durDiff === 0) {
+            score += 15;
+            matchReasons.push(`Perfect match for your ${userDur}-min daily goal`);
+          } else if (durDiff <= 15) {
+            score += 8;
+            matchReasons.push(`Fits your time availability (${classDur} mins)`);
+          }
+
+          // 3. BMI Category & Body Fat Matching
+          const bmiCat = (profile.bmiCategory || '').toLowerCase();
+          const bodyFat = (profile.bodyFat || '').toLowerCase();
+
+          if (bmiCat.includes('overweight') || bmiCat.includes('obese') || bodyFat.includes('high') || bodyFat.includes('> 30%')) {
+            if (text.includes('joint') || text.includes('mobility') || text.includes('gentle') || text.includes('flow') || text.includes('cardio') || text.includes('stretch')) {
+              score += 10;
+              matchReasons.push('Promotes joint mobility & comfortable calorie burn');
+            }
+          } else if (bmiCat.includes('underweight') || bodyFat.includes('low') || bodyFat.includes('< 15%')) {
+            if (text.includes('gentle') || text.includes('restorative') || text.includes('hatha') || text.includes('strength') || text.includes('alignment')) {
+              score += 10;
+              matchReasons.push('Focuses on balanced strength & gentle alignment');
+            }
+          } else if (bmiCat.includes('normal')) {
+            if (text.includes('balance') || text.includes('power') || text.includes('vinyasa') || text.includes('flexibility')) {
+              score += 5;
+              matchReasons.push('Ideal session for maintaining healthy BMI');
+            }
+          }
+
+          // 4. Body Type & Age Factor
+          const bodyType = (profile.bodyType || '').toLowerCase();
+          if (bodyType.includes('heavy') || bodyType.includes('big')) {
+            if (text.includes('mobility') || text.includes('stretch') || text.includes('flow')) {
+              score += 5;
+              matchReasons.push('Low-impact movement friendly for body type');
+            }
+          }
+
+          // 5. Reuse existing class level if present (Do NOT score on invented experience level)
+          if (cls.level) {
+            matchReasons.push(`Level: ${cls.level}`);
+          }
+
+          const matchPercentage = Math.min(98, Math.max(62, Math.round(score)));
+
+          return {
+            ...cls,
+            matchPercentage,
+            matchReasons: matchReasons.length > 0 ? matchReasons : ['Recommended for your fitness profile']
+          };
+        });
+
+        scoredClasses.sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+        res.send({
+          completed: true,
+          profile: user.onboardingProfile,
+          recommendations: scoredClasses
+        });
+
+      } catch (err) {
+        console.error("Error generating recommendations:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
 
     // ! CLASSES ROUTES
 
