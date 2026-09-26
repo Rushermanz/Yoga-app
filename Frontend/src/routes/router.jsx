@@ -25,6 +25,8 @@ import ManageClasses from "../pages/Dashboard/Admin/ManageClasses";
 import ManageUsers from "../pages/Dashboard/Admin/ManageUsers";
 import UpdateUser from "../pages/Dashboard/Admin/UpdateUser";
 import LiveClassRoom from "../pages/Dashboard/LiveClass/LiveClassRoom";
+import Onboarding from "../pages/user/Onboarding";
+import Recommendations from "../pages/Dashboard/Student/Recommendations";
 
 
 export const router = createBrowserRouter([
@@ -58,6 +60,10 @@ export const router = createBrowserRouter([
         path: "/class/:id",
         element: <SingleClass />,
         loader: ({params}) => fetch(`http://localhost:5000/class/${params.id}`)
+      },
+      {
+        path: "/onboarding",
+        element: <Onboarding />
       }
     ]
   },
@@ -72,6 +78,14 @@ export const router = createBrowserRouter([
       {
         path: "explore-classes",
         element: <Classes />
+      },
+      {
+        path: "recommendations",
+        element: <Recommendations />
+      },
+      {
+        path: "onboarding",
+        element: <Onboarding />
       },
       {
         path: "instructors",

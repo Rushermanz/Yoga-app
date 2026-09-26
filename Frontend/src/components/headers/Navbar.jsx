@@ -135,7 +135,7 @@ const Navbar = () => {
                       transition={{ duration: 0.2 }}
                     >
                       <Link
-                        to="/register"
+                        to="/onboarding"
                         className="text-sm font-bold px-5 py-2 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors duration-200 inline-block shadow-sm"
                       >
                         Get Started
@@ -224,7 +224,7 @@ const Navbar = () => {
                 {!user ? (
                   <>
                     <Link to="/login" className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-2">Sign In</Link>
-                    <Link to="/register" className="block px-3 py-2.5 rounded-lg text-sm font-bold bg-teal text-white text-center">Get Started</Link>
+                    <Link to="/onboarding" className="block px-3 py-2.5 rounded-lg text-sm font-bold bg-teal text-white text-center">Get Started</Link>
                   </>
                 ) : (
                   <>
