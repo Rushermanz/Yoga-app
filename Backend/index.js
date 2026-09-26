@@ -171,15 +171,17 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     const updatedUser = req.body;
     const filter = { _id: new ObjectId(id) };
     const options = { upsert: true };
+    const photo = updatedUser.photoUrl || updatedUser.photoURL || '';
     const updateDoc = {
         $set: {
             name: updatedUser.name,
             email: updatedUser.email,
-            role: updatedUser.option,
-            address: updatedUser.address,
-            phone: updatedUser.phone,
-            about: updatedUser.about,
-            photoUrl: updatedUser.photoUrl,
+            role: updatedUser.option ? updatedUser.option.trim().toLowerCase() : 'user',
+            address: updatedUser.address || '',
+            phone: updatedUser.phone || '',
+            about: updatedUser.about || '',
+            photoUrl: photo,
+            photoURL: photo,
             skills: updatedUser.skills ? updatedUser.skills : null,
         }
     }
@@ -200,8 +202,17 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
     app.get("/classes", async (req, res) => {
       try {
-        const { category, categories, level } = req.query;
+        const { category, categories, level, status } = req.query;
         let query = {};
+
+        // By default, only return approved classes to the public
+        if (status) {
+          if (status !== 'all') {
+            query.status = status;
+          }
+        } else {
+          query.status = 'approved';
+        }
 
         // Parse single or multiple category query parameters
         const rawCategories = categories || category;
@@ -556,7 +567,7 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
      app.get('/popular_classes', async (req, res) => {
       try {
-        const result = await classesCollection.find().sort({ totalEnrolled: -1 }).limit(6).toArray();
+        const result = await classesCollection.find({ status: 'approved' }).sort({ totalEnrolled: -1 }).limit(6).toArray();
         res.send(result);
       } catch (err) {
         console.warn("/popular_classes query fallback:", err.message);
@@ -568,6 +579,9 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
   app.get('/popular-instructors', async (req, res) => {
     try {
       const pipeline = [
+          {
+              $match: { status: 'approved' }
+          },
           {
               $group: {
                   _id: "$instructorEmail",

@@ -28,10 +28,10 @@ const UpdateUser = () => {
         <div>
             <div>
   <h1 className="mt-5 text-4xl font-bold text-center">
-    Update : <span className="text-secondary">{user?.displayName}</span>
+    Update : <span className="text-secondary">{userCredentials?.name || userCredentials?.email}</span>
   </h1>
   <p className="text-center">
-    Change details about <span className="font-bold text-red-400">{user?.displayName}</span>
+    Change details about <span className="font-bold text-red-400">{userCredentials?.name || userCredentials?.email}</span>
   </p>
   {/* Form area starts here */}
   <section className="">
@@ -56,7 +56,6 @@ const UpdateUser = () => {
               <input
                 className="w-full p-3 mt-3 text-sm border rounded-lg outline-none border-secondary"
                 placeholder="Phone Number"
-                required
                 type="tel"
                 id="phone"
                 defaultValue={userCredentials?.phone || ''}
@@ -76,7 +75,7 @@ const UpdateUser = () => {
                 placeholder="Email address"
                 type="email"
                 required
-                defaultValue={userCredentials?.email}
+                defaultValue={userCredentials?.email || ''}
                 name="email"
                 id="email"
               />
@@ -102,20 +101,21 @@ const UpdateUser = () => {
               <input
                 className="w-full p-3 mt-2 text-sm border rounded-lg outline-none border-secondary"
                 placeholder="Address"
-                required
-                defaultValue={userCredentials?.address}
+                defaultValue={userCredentials?.address || ''}
                 name="address"
                 type="text"
               />
             </div>
             <div>
-              <label className="ml-2" htmlFor="photoUrl">Photo URL</label>
+              <label className="ml-2" htmlFor="photoUrl">
+                Photo URL <span className="text-xs text-gray-500 font-normal">(optional)</span>
+              </label>
               <input
                 className="w-full p-3 mt-2 text-sm border rounded-lg outline-none border-secondary"
-                placeholder="Photo URL"
+                placeholder="Photo URL (optional)"
                 name="photoUrl"
-                required
-                defaultValue={userCredentials?.photoUrl}
+                id="photoUrl"
+                defaultValue={userCredentials?.photoUrl || userCredentials?.photoURL || ''}
                 type="text"
               />
             </div>
