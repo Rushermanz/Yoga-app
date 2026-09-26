@@ -69,6 +69,14 @@ export const router = createBrowserRouter([
         index: true,
         element: <Dashboard />
       },
+      {
+        path: "explore-classes",
+        element: <Classes />
+      },
+      {
+        path: "instructors",
+        element: <Instructor />
+      },
 
       //students routes
       {

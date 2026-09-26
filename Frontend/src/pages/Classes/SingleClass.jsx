@@ -111,6 +111,7 @@ const SingleClass = () => {
   });
   const isFull = (course.availableSeats || 0) < 1;
   const courseLevel = course.level || 'Beginner';
+  const isOwnClass = Boolean(currentUser?.email && course?.instructorEmail === currentUser.email);
 
   // Compute Review Statistics
   // If no reviews yet, use authentic initial placeholder reviews for social proof
@@ -154,8 +155,12 @@ const SingleClass = () => {
       navigate('/login');
       return;
     }
-    if (role === 'admin' || role === 'instructor') {
-      toast.warn(`${role.charAt(0).toUpperCase() + role.slice(1)} accounts cannot enroll in classes`);
+    if (role === 'admin') {
+      toast.warn("Admins cannot enroll in classes");
+      return;
+    }
+    if (isOwnClass) {
+      toast.warn("You teach this class and cannot enroll in your own course");
       return;
     }
     if (isEnrolled) {
@@ -197,8 +202,12 @@ const SingleClass = () => {
       toast.error('Please sign in to save this class');
       return;
     }
-    if (role === 'admin' || role === 'instructor') {
-      toast.warn(`${role.charAt(0).toUpperCase() + role.slice(1)} accounts cannot save classes`);
+    if (role === 'admin') {
+      toast.warn("Admins cannot save classes");
+      return;
+    }
+    if (isOwnClass) {
+      toast.warn("You teach this class and cannot save your own course");
       return;
     }
     if (isEnrolled) {
@@ -941,7 +950,21 @@ const SingleClass = () => {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {isEnrolled ? (
+                {isOwnClass ? (
+                  <>
+                    <Link to="/dashboard/my-classes" className="block">
+                      <button className="w-full py-3.5 px-4 bg-navy hover:bg-slate-800 text-white font-bold rounded-btn text-sm transition-all shadow-md flex items-center justify-center gap-2">
+                        Manage Your Course
+                      </button>
+                    </Link>
+                    <Link to={`/dashboard/live-class/${course._id}`} className="block">
+                      <button className="w-full py-2.5 px-4 border border-teal text-teal hover:bg-teal hover:text-white font-bold rounded-btn text-xs transition-all flex items-center justify-center gap-2">
+                        <MdLiveTv className="text-sm" />
+                        Host Live Session
+                      </button>
+                    </Link>
+                  </>
+                ) : isEnrolled ? (
                   <Link to={`/dashboard/live-class/${course._id}`} className="block">
                     <button className="w-full py-3.5 px-4 bg-teal hover:bg-teal-600 text-white font-bold rounded-btn text-sm transition-all shadow-md flex items-center justify-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
@@ -949,22 +972,24 @@ const SingleClass = () => {
                     </button>
                   </Link>
                 ) : (
-                  <button
-                    onClick={handleEnrollNow}
-                    disabled={isFull || role === 'admin' || role === 'instructor'}
-                    className="w-full py-3.5 px-4 bg-teal hover:bg-teal-600 disabled:opacity-50 text-white font-bold rounded-btn text-sm transition-all shadow-md flex items-center justify-center gap-2"
-                  >
-                    {isFull ? 'Class Full' : `Enroll Now (₹${course.price})`}
-                  </button>
-                )}
+                  <>
+                    <button
+                      onClick={handleEnrollNow}
+                      disabled={isFull || role === 'admin'}
+                      className="w-full py-3.5 px-4 bg-teal hover:bg-teal-600 disabled:opacity-50 text-white font-bold rounded-btn text-sm transition-all shadow-md flex items-center justify-center gap-2"
+                    >
+                      {isFull ? 'Class Full' : `Enroll Now (₹${course.price})`}
+                    </button>
 
-                <button
-                  onClick={handleSaveForLater}
-                  disabled={isEnrolled || role === 'admin' || role === 'instructor'}
-                  className="w-full py-2.5 px-4 border border-border-ui hover:border-teal text-navy font-semibold rounded-btn text-xs transition-colors flex items-center justify-center gap-2"
-                >
-                  Save to Wishlist
-                </button>
+                    <button
+                      onClick={handleSaveForLater}
+                      disabled={role === 'admin'}
+                      className="w-full py-2.5 px-4 border border-border-ui hover:border-teal text-navy font-semibold rounded-btn text-xs transition-colors flex items-center justify-center gap-2"
+                    >
+                      Save to Wishlist
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Guarantees and highlights */}

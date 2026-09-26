@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import useUser from '../../../hooks/useUser'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import moment from 'moment';
 import { MdDeleteSweep } from 'react-icons/md';
@@ -106,7 +106,20 @@ const SelectedClass = () => {
                             {/* table body */}
                             <tbody>
                                 {
-                                    classes.length === 0 ? <tr><td colSpan='5' className='text-2xl font-bold text-center'>No Classes Found</td></tr> : 
+                                    classes.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="py-12 text-center">
+                                                <p className="text-base font-semibold text-text-primary mb-1">No Saved Classes Found</p>
+                                                <p className="text-xs text-text-secondary mb-4">You haven't saved any classes to your list yet.</p>
+                                                <Link
+                                                    to="/dashboard/explore-classes"
+                                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal text-white text-xs font-semibold rounded-btn hover:bg-teal-600 transition-colors shadow-sm"
+                                                >
+                                                    Explore Classes
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ) : 
                                     classes.map((item, idx)  => {
                                         const letIdx = (page - 1) * itemPerPage + idx + 1; 
                                         return (

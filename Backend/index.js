@@ -549,19 +549,88 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
       
       app.get('/payment-history/:email', async (req, res) => {
-        const email = req.params.email;
-        const query = { userEmail: email };
-        const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
-        res.send(result);
-    })
+        try {
+          const email = req.params.email;
+          const user = await userCollection.findOne({ email });
 
+          if (user && (user.role === 'instructor' || user.role?.trim() === 'instructor')) {
+            // Find all classes created by this instructor
+            const instructorClasses = await classesCollection.find({ instructorEmail: email }).toArray();
+            const instructorClassIds = instructorClasses.map(c => c._id.toString());
+            const instructorClassIdObjects = instructorClasses.map(c => c._id);
 
-    app.get('/payment-history-length/:email', async (req, res) => {
+            // Find payments where students paid for instructor's classes OR payments made by the instructor
+            const payments = await paymentCollection.find({
+              $or: [
+                { classesId: { $in: instructorClassIds } },
+                { classesId: { $in: instructorClassIdObjects } },
+                { userEmail: email }
+              ]
+            }).sort({ date: -1 }).toArray();
+
+            // Enrich payments with class names
+            const enriched = payments.map(p => {
+              const matchedClasses = instructorClasses.filter(c =>
+                p.classesId && p.classesId.some(id => id.toString() === c._id.toString())
+              );
+              const classNames = matchedClasses.map(c => c.name).join(', ') || 'Yoga Course';
+              return {
+                ...p,
+                classNames,
+                isEarnings: p.userEmail !== email
+              };
+            });
+            return res.send(enriched);
+          }
+
+          const query = { userEmail: email };
+          const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+          res.send(result);
+        } catch (err) {
+          console.error("Error in /payment-history:", err);
+          res.status(500).send({ error: true, message: err.message });
+        }
+      });
+
+      app.get('/instructor-payments/:email', async (req, res) => {
+        try {
+          const email = req.params.email;
+          const instructorClasses = await classesCollection.find({ instructorEmail: email }).toArray();
+          const instructorClassIds = instructorClasses.map(c => c._id.toString());
+          const instructorClassIdObjects = instructorClasses.map(c => c._id);
+
+          const payments = await paymentCollection.find({
+            $or: [
+              { classesId: { $in: instructorClassIds } },
+              { classesId: { $in: instructorClassIdObjects } },
+              { userEmail: email }
+            ]
+          }).sort({ date: -1 }).toArray();
+
+          const enriched = payments.map(p => {
+            const matchedClasses = instructorClasses.filter(c =>
+              p.classesId && p.classesId.some(id => id.toString() === c._id.toString())
+            );
+            const classNames = matchedClasses.map(c => c.name).join(', ') || 'Yoga Course';
+            return {
+              ...p,
+              classNames,
+              isEarnings: p.userEmail !== email
+            };
+          });
+          res.send(enriched);
+        } catch (err) {
+          console.error("Error in /instructor-payments:", err);
+          res.status(500).send({ error: true, message: err.message });
+        }
+      });
+
+      app.get('/payment-history-length/:email', async (req, res) => {
         const email = req.params.email;
         const query = { userEmail: email };
         const total = await paymentCollection.countDocuments(query);
         res.send({ total });
-    })
+      });
 
      // ! ENROLLED ROUTES
 
@@ -658,7 +727,7 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
               app.get('/instructors', async (req, res) => {
                 try {
-                  const result = await userCollection.find({ role: 'instructor' }).toArray();
+                  const result = await userCollection.find({ role: { $regex: /^instructor/i } }).toArray();
                   res.send(result);
                 } catch (err) {
                   console.warn("/instructors query fallback:", err.message);

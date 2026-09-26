@@ -1,115 +1,279 @@
-import { useEffect, useState } from "react";
-import useAxiosFetch from "../../../../../hooks/useAxiosFetch"
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import useAxiosFetch from "../../../../../hooks/useAxiosFetch";
 import useAxiosSecure from "../../../../../hooks/useAxiosSecure";
 import useUser from "../../../../../hooks/useUser";
-import Payment from "../Payment";
 import moment from 'moment';
+import { FiDollarSign, FiCreditCard, FiCheckCircle, FiSearch, FiCalendar, FiUser, FiBookOpen } from 'react-icons/fi';
 
+const MetricCard = ({ label, value, color, bg, icon }) => (
+  <div className="bg-white rounded-card border border-border-ui p-5 flex items-center gap-4 shadow-sm">
+    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0 text-xl`}>
+      {icon}
+    </div>
+    <div>
+      <p className={`text-2xl font-bold ${color}`}>{value ?? '—'}</p>
+      <p className="text-xs text-text-secondary mt-0.5 leading-snug">{label}</p>
+    </div>
+  </div>
+);
 
 const MyPaymentHistory = () => {
   const axiosFetch = useAxiosFetch();
   const axiosSecure = useAxiosSecure();
-  const {currentUser} = useUser();
+  const { currentUser } = useUser();
+  const role = currentUser?.role;
+  const isInstructor = role === 'instructor';
 
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paginatedPayments, setPaginatedPayments] = useState([]);
-  const totalItem = payments.length;
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  let  totalPage = Math.ceil(totalItem / 5);
-  let  itemsPerPage = 5;
-  const handleChange = (event, value) => {
-    setPage(value);
-  }
+  const itemsPerPage = 6;
 
   useEffect(() => {
-    const lastIndex = page * itemsPerPage;
-    const firstIndex = lastIndex - itemsPerPage;
-    const currentItems = payments.slice(firstIndex, lastIndex);
-    setPaginatedPayments(currentItems)
+    if (!currentUser?.email) return;
+    setLoading(true);
+    const endpoint = isInstructor 
+      ? `/instructor-payments/${currentUser.email}`
+      : `/payment-history/${currentUser.email}`;
 
-  },[page, payments])
+    axiosFetch.get(endpoint)
+      .then(res => {
+        setPayments(Array.isArray(res.data) ? res.data : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback to /payment-history
+        axiosFetch.get(`/payment-history/${currentUser.email}`)
+          .then(res => {
+            setPayments(Array.isArray(res.data) ? res.data : []);
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
+      });
+  }, [currentUser?.email, isInstructor]);
 
-  useEffect(() => {
-    axiosFetch.get(`/payment-history/${currentUser?.email}`)
-    .then(res => {
-      setPayments(res.data)
-      setLoading(false)
+  const totalAmount = payments.reduce((acc, curr) => acc + (Number(curr.amount) || Number(curr.price) || 0), 0);
+  const totalClassesCount = payments.reduce((acc, curr) => acc + (curr.classesId?.length || 1), 0);
 
-    }).catch(err => console.log(err))
-  }, [currentUser.email]);
+  // Search filter
+  const filtered = payments.filter(p => {
+    const q = search.toLowerCase();
+    const matchTx = p.transactionId?.toLowerCase().includes(q);
+    const matchClass = p.classNames?.toLowerCase().includes(q);
+    const matchUser = p.userName?.toLowerCase().includes(q) || p.userEmail?.toLowerCase().includes(q);
+    return matchTx || matchClass || matchUser;
+  });
 
-  const totalPaidAmount = payments.reduce((acc, curr) => acc + curr.amount, 0);
-  if(loading){
-    return <h1>Loading..</h1>
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+  const startIndex = (page - 1) * itemsPerPage;
+  const currentItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 bg-white rounded-card border border-border-ui">
+        <div className="w-10 h-10 border-4 border-teal border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm font-medium text-text-secondary">Loading payment records...</p>
+      </div>
+    );
   }
-
-
 
   return (
-    <div>
-    <div className="mt-6 mb-16 text-center">
-      <p className="text-gray-400">
-        Hey, {" "}
-        <span className="font-bold text-secondary">{currentUser.name}</span> {" "}
-        Welcome...!
-      </p>
-      <h1 className="text-4xl font-bold">
-        My Paym<span className="text-secondary">ent Hist</span>ory
-      </h1>
-      <p className="my-3 text-sm text-gray-500">
-        You can see your payment history here{" "}
-      </p>
-    </div>
-  
-    {/* table here */}
-    <div className='p-6 mb-4 bg-white rounded-lg shadow-md'>
-     
-    <div>
-        <p className="font-bold">Total Payments: {payments.length}</p>
-        <p className="font-bold">Total Paid: ₹{totalPaidAmount}</p>
-    </div>
-      
-     <table  className='w-full'>
-     <thead>
-                                <tr>
-                                    <th className='font-semibold text-left'>#</th>
-                                    <th className='font-semibold text-left'>Amount (₹)</th>
-                                    <th className='font-semibold text-left'>Total Item</th>
-                                    <th className='font-semibold text-left'>Time</th>
-                                </tr>
-     </thead>
-     
-     <tbody>
-  {
-    paginatedPayments.map((Payment, idx) => (
-      <tr key={idx}> {/* Added key prop for unique identification */}
-        <td className='py-4'>{idx + 1}</td>
-        <td className="px-6 py-4 whitespace-nowrap font-semibold">₹{Payment.amount}</td>
-        <td className="px-6 py-4 whitespace-nowrap">{Payment.classesId.length}</td>
-        <td className='py-4'>
-          <p className='text-sm text-green-700'>
-            {/* Date and Time display using moment.js */}
-            {moment(Payment.submitted).format("MMMM Do YYYY, h:mm:ss a")}
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-navy">
+            {isInstructor ? 'Payment History & Earnings' : 'Payment History'}
+          </h1>
+          <p className="text-sm text-text-secondary mt-0.5">
+            {isInstructor
+              ? 'Track student enrollments, course payments, and your earnings.'
+              : 'Review your enrolled course payments, receipts, and transaction history.'}
           </p>
-        </td>
-      </tr>
-    ))
-  }
-</tbody>
+        </div>
 
-      
-      
-     </table>
-      
-      
+        {/* Search */}
+        <div className="relative w-full sm:w-72">
+          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary w-4 h-4" />
+          <input
+            type="text"
+            placeholder={isInstructor ? "Search student, tx ID, or class..." : "Search transaction ID or class..."}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-border-ui rounded-btn text-xs text-text-primary placeholder-text-secondary focus:outline-none focus:border-teal transition-all"
+          />
+        </div>
+      </div>
 
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard
+          label={isInstructor ? "Total Earnings" : "Total Paid"}
+          value={`₹${totalAmount.toLocaleString()}`}
+          color="text-navy"
+          bg="bg-teal-100"
+          icon="💰"
+        />
+        <MetricCard
+          label={isInstructor ? "Enrollment Transactions" : "Completed Payments"}
+          value={payments.length}
+          color="text-blue-ai"
+          bg="bg-blue-ai-100"
+          icon="🧾"
+        />
+        <MetricCard
+          label={isInstructor ? "Avg. Per Enrollment" : "Courses Purchased"}
+          value={
+            isInstructor
+              ? (payments.length ? `₹${Math.round(totalAmount / payments.length)}` : '₹0')
+              : totalClassesCount
+          }
+          color="text-coral"
+          bg="bg-coral-100"
+          icon="📈"
+        />
+      </div>
+
+      {/* Transactions Table Card */}
+      <div className="bg-white rounded-card border border-border-ui shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border-ui flex items-center justify-between">
+          <p className="text-sm font-bold text-navy">
+            {isInstructor ? 'Received Payments' : 'Payment Records'}
+          </p>
+          <span className="text-xs text-text-secondary font-medium">
+            Showing {currentItems.length} of {filtered.length} entries
+          </span>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 px-4">
+            <div className="w-14 h-14 rounded-full bg-teal-50 text-teal flex items-center justify-center mx-auto text-2xl mb-3">
+              <FiCreditCard className="w-7 h-7" />
+            </div>
+            <p className="font-bold text-navy text-base mb-1">
+              {search ? 'No payments match your search' : 'No Payment Records Found'}
+            </p>
+            <p className="text-xs text-text-secondary max-w-sm mx-auto mb-4">
+              {search
+                ? 'Try a different search term or clear the filter.'
+                : isInstructor
+                ? 'When students enroll and pay for your courses, transaction receipts and earnings will appear here.'
+                : 'You have not made any class payments yet. Explore classes to get started!'}
+            </p>
+            {search ? (
+              <button
+                onClick={() => setSearch('')}
+                className="px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors"
+              >
+                Clear Search
+              </button>
+            ) : (
+              <Link
+                to="/dashboard/explore-classes"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors shadow-sm"
+              >
+                Explore Classes
+              </Link>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-bg-base text-[11px] font-bold text-text-secondary uppercase tracking-wider border-b border-border-ui">
+                    <th className="px-5 py-3">#</th>
+                    <th className="px-5 py-3">Course / Details</th>
+                    {isInstructor && <th className="px-5 py-3">Student</th>}
+                    <th className="px-5 py-3">Transaction ID</th>
+                    <th className="px-5 py-3">Date</th>
+                    <th className="px-5 py-3">Amount</th>
+                    <th className="px-5 py-3 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-ui">
+                  {currentItems.map((payment, idx) => {
+                    const rawDate = payment.date || payment.submitted;
+                    const dateFormatted = rawDate
+                      ? moment(rawDate).format("MMM DD, YYYY · h:mm A")
+                      : 'Recent';
+
+                    return (
+                      <tr key={payment._id || idx} className="hover:bg-surface-2 transition-colors">
+                        <td className="px-5 py-3.5 text-text-secondary font-medium">
+                          {startIndex + idx + 1}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <p className="font-bold text-text-primary text-xs leading-snug">
+                            {payment.classNames || 'Yoga Master Course'}
+                          </p>
+                          <span className="text-[10px] text-text-secondary">
+                            {payment.classesId?.length ? `${payment.classesId.length} class item(s)` : '1 class'}
+                          </span>
+                        </td>
+                        {isInstructor && (
+                          <td className="px-5 py-3.5">
+                            <p className="font-semibold text-text-primary text-xs">
+                              {payment.userName || 'Student'}
+                            </p>
+                            <p className="text-[10px] text-text-secondary truncate max-w-[150px]">
+                              {payment.userEmail || '—'}
+                            </p>
+                          </td>
+                        )}
+                        <td className="px-5 py-3.5">
+                          <code className="text-[11px] px-2 py-0.5 rounded bg-surface-2 text-navy font-mono border border-border-ui">
+                            {payment.transactionId || 'N/A'}
+                          </code>
+                        </td>
+                        <td className="px-5 py-3.5 text-text-secondary whitespace-nowrap">
+                          {dateFormatted}
+                        </td>
+                        <td className="px-5 py-3.5 font-bold text-text-primary">
+                          ₹{payment.amount}
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal">
+                            <FiCheckCircle className="w-3 h-3" />
+                            Completed
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-5 py-3 border-t border-border-ui flex items-center justify-between bg-bg-base">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 border border-border-ui rounded-btn text-xs font-semibold text-text-secondary hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-text-secondary font-medium">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 border border-border-ui rounded-btn text-xs font-semibold text-text-secondary hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
-    
-    
-  </div>
-  
-    )
-}
+  );
+};
 
-export default MyPaymentHistory
+export default MyPaymentHistory;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import useUser from '../../hooks/useUser'
@@ -25,6 +25,8 @@ const Classes = () => {
   const axiosFetch = useAxiosFetch()
   const axiosSecure = useAxiosSecure()
   const navigate = useNavigate()
+  const location = useLocation()
+  const isDashboard = location.pathname.startsWith('/dashboard')
   const role = currentUser?.role
 
   useEffect(() => {
@@ -96,33 +98,59 @@ const Classes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base">
+    <div className={isDashboard ? "w-full" : "min-h-screen bg-bg-base"}>
       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
 
       {/* Page header */}
-      <div className="pt-24 pb-8 bg-navy">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6">
-          <h1 className="text-3xl font-bold text-white mb-1">Find your next class</h1>
-          <p className="text-sm text-white/60">Browse {classes.length} classes across all skill levels and goals.</p>
+      {isDashboard ? (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-navy">Explore Classes</h1>
+            <p className="text-sm text-text-secondary mt-0.5">
+              Browse {classes.length} approved classes across skill levels and categories.
+            </p>
+          </div>
 
           {/* Search */}
-          <div className="relative mt-5 max-w-lg">
-            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" viewBox="0 0 24 24" fill="none">
+          <div className="relative w-full sm:w-72">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
               <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <input
               type="text"
-              placeholder="Search classes, instructors, or goals"
+              placeholder="Search classes or instructors..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-btn text-white placeholder-white/40 text-sm focus:outline-none focus:border-teal focus:bg-white/15 transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-border-ui rounded-btn text-xs text-text-primary placeholder-text-secondary focus:outline-none focus:border-teal transition-all"
             />
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="pt-24 pb-8 bg-navy">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6">
+            <h1 className="text-3xl font-bold text-white mb-1">Find your next class</h1>
+            <p className="text-sm text-white/60">Browse {classes.length} classes across all skill levels and goals.</p>
 
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 py-8">
+            {/* Search */}
+            <div className="relative mt-5 max-w-lg">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search classes, instructors, or goals"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-btn text-white placeholder-white/40 text-sm focus:outline-none focus:border-teal focus:bg-white/15 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={isDashboard ? "w-full pb-8" : "max-w-[1360px] mx-auto px-4 sm:px-6 py-8"}>
         {/* Filter row */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           {/* Category chips */}
@@ -191,6 +219,7 @@ const Classes = () => {
             {filtered.map((cls, index) => {
               const isFull = cls.availableSeats < 1
               const diff = cls.level || 'Beginner'
+              const isOwnClass = Boolean(currentUser?.email && cls.instructorEmail === currentUser.email)
               return (
                 <div
                   key={index}
@@ -239,10 +268,11 @@ const Classes = () => {
                     <div className="flex gap-2 mt-auto">
                       <button
                         onClick={() => handleSelect(cls._id)}
-                        disabled={role === 'admin' || role === 'instructor' || isFull}
+                        disabled={role === 'admin' || isOwnClass || isFull}
+                        title={isOwnClass ? "You teach this class" : ""}
                         className="flex-1 py-2 text-xs font-bold border border-teal text-teal rounded-btn hover:bg-teal hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
                       >
-                        Save
+                        {isOwnClass ? 'Your Class' : 'Save'}
                       </button>
                       <Link to={`/class/${cls._id}`} className="flex-1">
                         <button className="w-full py-2 text-xs font-bold bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors">

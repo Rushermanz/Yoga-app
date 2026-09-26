@@ -58,7 +58,7 @@ const EnrolledClasses = () => {
             </p>
           </div>
           <Link
-            to="/classes"
+            to="/dashboard/explore-classes"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal text-white font-semibold text-sm rounded-btn hover:bg-teal-600 transition-colors shadow-sm"
           >
             Explore Classes

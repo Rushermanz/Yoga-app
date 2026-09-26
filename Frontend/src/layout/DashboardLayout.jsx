@@ -7,37 +7,49 @@ import Scroll from '../hooks/useScroll'
 import { HashLoader } from 'react-spinners'
 
 // ── Nav items per role ──────────────────────────────────────
+// ── Nav items per role ──────────────────────────────────────
 const adminNavItems = [
-  { to: '/dashboard/admin-home',  label: 'Overview',               icon: IconGrid },
-  { to: '/dashboard/manage-users',label: 'Users',                   icon: IconUsers },
-  { to: '/dashboard/manage-class',label: 'Classes',                 icon: IconBook },
+  { to: '/dashboard/admin-home',     label: 'Overview',        icon: IconGrid },
+  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
+  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
+  { to: '/dashboard/manage-users',   label: 'Users',           icon: IconUsers },
+  { to: '/dashboard/manage-class',   label: 'Classes',         icon: IconBook },
 ]
 
 const instructorNavItems = [
-  { to: '/dashboard/instructor-cp', label: 'Overview',             icon: IconGrid },
-  { to: '/dashboard/add-class',     label: 'Create Class',         icon: IconPlus },
-  { to: '/dashboard/my-classes',    label: 'My Classes',           icon: IconBook },
+  { to: '/dashboard/instructor-cp',  label: 'Overview',        icon: IconGrid },
+  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
+  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
+  { to: '/dashboard/add-class',      label: 'Create Class',    icon: IconPlus },
+  { to: '/dashboard/my-classes',     label: 'My Classes',      icon: IconBook },
+  { to: '/dashboard/enrolled-class', label: 'My Training',     icon: IconPlay },
+  { to: '/dashboard/my-selected',    label: 'Saved Classes',   icon: IconBookmark },
+  { to: '/dashboard/my-payments',    label: 'Payment History', icon: IconCard },
 ]
 
 const studentNavItems = [
-  { to: '/dashboard/student-cp',     label: 'Home',                icon: IconGrid },
-  { to: '/dashboard/enrolled-class', label: 'My Training',         icon: IconPlay },
-  { to: '/dashboard/my-selected',    label: 'Saved Classes',       icon: IconBookmark },
-  { to: '/dashboard/my-payments',    label: 'Payments',            icon: IconCard },
-  { to: '/dashboard/apply-instructor',label: 'Become an Instructor',icon: IconBadge },
+  { to: '/dashboard/student-cp',     label: 'Home',            icon: IconGrid },
+  { to: '/dashboard/explore-classes',label: 'Explore Classes', icon: IconCompass },
+  { to: '/dashboard/instructors',    label: 'Instructors',     icon: IconInstructor },
+  { to: '/dashboard/enrolled-class', label: 'My Training',     icon: IconPlay },
+  { to: '/dashboard/my-selected',    label: 'Saved Classes',   icon: IconBookmark },
+  { to: '/dashboard/my-payments',    label: 'Payments',        icon: IconCard },
+  { to: '/dashboard/apply-instructor',label: 'Become an Instructor', icon: IconBadge },
 ]
 
 // ── Inline SVG Icons ────────────────────────────────────────
-function IconGrid()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/></svg> }
-function IconUsers()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2"/></svg> }
-function IconBook()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2"/></svg> }
-function IconPlay()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M10 8l6 4-6 4V8z" fill="currentColor"/></svg> }
-function IconBookmark() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> }
-function IconCard()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M1 10h22" stroke="currentColor" strokeWidth="2"/></svg> }
-function IconBadge()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg> }
-function IconPlus()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> }
-function IconHome()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="2"/><path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="2"/></svg> }
-function IconLogout()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconGrid()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconCompass()    { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor"/></svg> }
+function IconInstructor() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> }
+function IconUsers()      { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconBook()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconPlay()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M10 8l6 4-6 4V8z" fill="currentColor"/></svg> }
+function IconBookmark()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> }
+function IconCard()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M1 10h22" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconBadge()      { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg> }
+function IconPlus()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> }
+function IconHome()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="2"/><path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="2"/></svg> }
+function IconLogout()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/></svg> }
 
 // ── NavItem component ────────────────────────────────────────
 const NavItem = ({ to, label, icon: Icon, collapsed }) => (

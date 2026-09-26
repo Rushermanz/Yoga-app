@@ -34,7 +34,7 @@ const StudentCP = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-navy">
             {getGreeting()}, {firstName}
@@ -43,6 +43,16 @@ const StudentCP = () => {
             You're 2 sessions away from this week's target.
           </p>
         </div>
+        <Link
+          to="/dashboard/explore-classes"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal hover:bg-teal-600 text-white text-xs font-semibold rounded-btn transition-colors shadow-sm self-start sm:self-auto"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
+          </svg>
+          <span>Explore Classes</span>
+        </Link>
       </div>
 
       {/* Top row */}

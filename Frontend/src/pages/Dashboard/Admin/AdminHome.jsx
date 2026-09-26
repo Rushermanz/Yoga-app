@@ -38,11 +38,20 @@ const AdminHome = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-navy">
-          Overview <span className="text-text-secondary font-normal text-lg">· Welcome back, {firstName}</span>
-        </h1>
-        <p className="text-sm text-text-secondary mt-0.5">Here's what's happening on the platform today.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-navy">
+            Overview <span className="text-text-secondary font-normal text-lg">· Welcome back, {firstName}</span>
+          </h1>
+          <p className="text-sm text-text-secondary mt-0.5">Here's what's happening on the platform today.</p>
+        </div>
+        <Link
+          to="/dashboard/explore-classes"
+          className="inline-flex items-center gap-1.5 px-4 py-2 border border-border-ui bg-white hover:bg-surface-2 text-text-primary text-xs font-semibold rounded-btn transition-colors shadow-sm self-start sm:self-auto"
+        >
+          <span>Explore Classes</span>
+          <span>→</span>
+        </Link>
       </div>
 
       {/* Metric cards */}
