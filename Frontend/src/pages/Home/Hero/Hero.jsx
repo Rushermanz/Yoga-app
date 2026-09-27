@@ -81,12 +81,6 @@ const Hero = () => {
                   <span>Try our AI Assistant</span>
                 </button>
               )}
-              <Link
-                to="/classes"
-                className="inline-flex items-center justify-center px-4 py-3 text-white/80 hover:text-white transition-colors duration-200 text-sm cursor-pointer select-none underline-offset-4 hover:underline"
-              >
-                Explore Classes
-              </Link>
             </div>
 
             {/* Quick stats */}
