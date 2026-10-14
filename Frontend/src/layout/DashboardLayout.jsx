@@ -14,7 +14,7 @@ const adminNavItems = [
   { to: '/dashboard/manage-users',        label: 'Users',           icon: IconUsers },
   { to: '/dashboard/manage-class',        label: 'Classes',         icon: IconBook },
   { to: '/dashboard/manage-applications', label: 'Applications',    icon: IconBadge },
-  { to: '/dashboard/profile',             label: 'My Profile & Personalisation', icon: IconUser },
+  { to: '/dashboard/profile',             label: 'Profile & Settings', icon: IconUser },
   { isDivider: true, label: 'Explore & Browse' },
   { to: '/dashboard/explore-classes',     label: 'Explore Classes', icon: IconCompass },
   { to: '/dashboard/instructors',         label: 'Instructors',     icon: IconInstructor },
@@ -28,7 +28,7 @@ const instructorNavItems = [
   { isDivider: true, label: 'My Practice & Learning' },
   { to: '/dashboard/student-cp',     label: 'Practice Hub',      icon: IconHome },
   { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/profile',        label: 'Profile & Personalisation', icon: IconUser },
+  { to: '/dashboard/profile',        label: 'Profile & Settings', icon: IconUser },
   { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
   { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
   { to: '/dashboard/my-payments',    label: 'Payment History',   icon: IconCard },
@@ -41,7 +41,7 @@ const studentNavItems = [
   { isDivider: true, label: 'My Practice & Learning' },
   { to: '/dashboard/student-cp',     label: 'Home',              icon: IconGrid },
   { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/profile',        label: 'Profile & Personalisation', icon: IconUser },
+  { to: '/dashboard/profile',        label: 'Profile & Settings', icon: IconUser },
   { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
   { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
   { to: '/dashboard/my-payments',    label: 'Payments',          icon: IconCard },
@@ -214,13 +214,6 @@ const DashboardLayout = () => {
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-xs text-text-secondary hidden sm:block">{currentUser?.email}</span>
-            <Link
-              to="/dashboard/profile"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-100 hover:bg-teal-200 text-teal-800 text-xs font-bold rounded-btn transition-colors border border-teal/30 shadow-xs"
-            >
-              <span>✨</span>
-              <span>Personalisation</span>
-            </Link>
           </div>
         </header>
 

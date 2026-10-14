@@ -163,10 +163,15 @@ const Onboarding = () => {
       { id: 'Power Yoga', label: 'Power Yoga', desc: 'High-energy sessions for metabolism boost' },
       { id: 'Bikram', label: 'Bikram / Hot Yoga', desc: 'Heated practice for maximum caloric burn' }
     ],
+    'Posture Correction & Alignment': [
+      { id: 'Hatha Alignment', label: 'Hatha Alignment', desc: 'Structural alignment and posture awareness for spine and shoulders' },
+      { id: 'Desk Reset Flow', label: 'Desk Reset Flow', desc: 'Targeted mobility to counteract sitting and forward-head posture' },
+      { id: 'Core & Spine Stability', label: 'Core & Spine Stability', desc: 'Deep stabilizer work to support spinal alignment' }
+    ],
     'Spiritual Growth & Mindfulness': [
-      { id: 'Kundalini', label: 'Kundalini Yoga', desc: 'Breath, mantra and movement for spiritual awakening' },
-      { id: 'Meditation', label: 'Yoga & Meditation', desc: 'Seated practice with mindfulness focus' },
-      { id: 'Hatha', label: 'Gentle Hatha', desc: 'Slow, mindful postures combined with breathwork' }
+      { id: 'Hatha Alignment', label: 'Hatha Alignment', desc: 'Structural alignment and posture awareness for spine and shoulders' },
+      { id: 'Desk Reset Flow', label: 'Desk Reset Flow', desc: 'Targeted mobility to counteract sitting and forward-head posture' },
+      { id: 'Core & Spine Stability', label: 'Core & Spine Stability', desc: 'Deep stabilizer work to support spinal alignment' }
     ],
     'Post-Injury Recovery & Rehabilitation': [
       { id: 'Restorative', label: 'Restorative Yoga', desc: 'Supported, gentle poses that encourage healing' },
@@ -442,7 +447,7 @@ const Onboarding = () => {
                       { id: 'Build Flexibility & Mobility', label: 'Build Flexibility & Mobility', desc: 'Deepen stretches, loosen joints and improve range of motion', icon: '🤸' },
                       { id: 'Strength & Toning', label: 'Strength & Toning', desc: 'Build core strength, endurance and lean muscle through asanas', icon: '💪' },
                       { id: 'Weight Management', label: 'Weight Management', desc: 'Burn calories, boost metabolism and support a healthy weight', icon: '⚖️' },
-                      { id: 'Spiritual Growth & Mindfulness', label: 'Spiritual Growth & Mindfulness', desc: 'Deepen awareness, breathwork and connect mind-body-spirit', icon: '🕉️' },
+                      { id: 'Posture Correction & Alignment', label: 'Posture Correction & Alignment', desc: 'Target forward-head tilt, rounded shoulders and spinal alignment', icon: '🧍' },
                       { id: 'Post-Injury Recovery & Rehabilitation', label: 'Post-Injury Recovery & Rehabilitation', desc: 'Gentle, targeted practice to heal and rebuild safely', icon: '🩹' }
                     ].map((g) => (
                       <OptionCard key={g.id} title={g.label} description={g.desc} selected={formData.primaryGoal === g.id} onClick={() => updateField('primaryGoal', g.id)} icon={g.icon} />

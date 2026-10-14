@@ -7,35 +7,34 @@ import useUser from '../../../hooks/useUser'
 import useAxiosSecure from '../../../hooks/useAxiosSecure'
 import useAuth from '../../../hooks/useAuth'
 
-// Curated Yogi Avatars for easy 1-click personalization
-const YOGI_AVATARS = [
-  { id: 'lotus', label: 'Lotus Pose', url: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=200&auto=format&fit=crop&q=80' },
-  { id: 'zen', label: 'Zen Calm', url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&auto=format&fit=crop&q=80' },
-  { id: 'warrior', label: 'Peaceful Warrior', url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&auto=format&fit=crop&q=80' },
-  { id: 'sunrise', label: 'Sunrise Stretch', url: 'https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?w=200&auto=format&fit=crop&q=80' },
-  { id: 'mindful', label: 'Mindful Flow', url: 'https://images.unsplash.com/photo-1552196563-55246c789077?w=200&auto=format&fit=crop&q=80' },
-  { id: 'balance', label: 'Tree Balance', url: 'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=200&auto=format&fit=crop&q=80' },
+// Curated athletic coaching and training avatars
+const AVATAR_PRESETS = [
+  { id: 'mobility', label: 'Mobility & Flow', url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=200&auto=format&fit=crop&q=80' },
+  { id: 'strength', label: 'Core & Strength', url: 'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=200&auto=format&fit=crop&q=80' },
+  { id: 'posture', label: 'Posture & Alignment', url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=200&auto=format&fit=crop&q=80' },
+  { id: 'sunrise', label: 'Morning Movement', url: 'https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?w=200&auto=format&fit=crop&q=80' },
+  { id: 'athlete', label: 'Athletic Conditioning', url: 'https://images.unsplash.com/photo-1552196563-55246c789077?w=200&auto=format&fit=crop&q=80' },
+  { id: 'recovery', label: 'Active Recovery', url: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=200&auto=format&fit=crop&q=80' },
 ]
 
 const GOAL_OPTIONS = [
-  { id: 'Build Flexibility & Mobility', title: 'Flexibility & Mobility', icon: '🤸‍♀️', desc: 'Lengthen tight muscles, open hips and deepen joint range.' },
-  { id: 'Stress Relief & Mental Wellness', title: 'Stress Relief & Calming', icon: '🧘‍♀️', desc: 'Unwind high tension, regulate breath and restore peace.' },
-  { id: 'Strength & Toning', title: 'Strength & Core Toning', icon: '💪', desc: 'Sculpt lean functional muscle and endurance with bodyweight flow.' },
-  { id: 'Weight Management', title: 'Weight Management', icon: '🔥', desc: 'Active calorie-burning flows and metabolic vitality.' },
-  { id: 'Spiritual Growth & Mindfulness', title: 'Mindfulness & Meditation', icon: '🪷', desc: 'Chakra alignment, deeper pranayama and seated stillness.' },
-  { id: 'Post-Injury Recovery & Rehabilitation', title: 'Injury Recovery & Gentle Care', icon: '🩹', desc: 'Therapeutic and low-impact modifications for safe healing.' }
+  { id: 'Build Flexibility & Mobility', title: 'Flexibility & Mobility', icon: '🤸', desc: 'Expand range of motion, relieve tight hips, and improve joint movement.' },
+  { id: 'Strength & Toning', title: 'Strength & Core Toning', icon: '💪', desc: 'Build functional bodyweight strength, core stability, and muscular endurance.' },
+  { id: 'Posture Correction', title: 'Posture Correction & Desk Reset', icon: '🧍', desc: 'Target forward-head tilt, rounded shoulders, and spine alignment.' },
+  { id: 'Stress Relief & Mental Wellness', title: 'Stress Management & Breathwork', icon: '🫁', desc: 'Down-regulate the nervous system with structured breath pacing and recovery.' },
+  { id: 'Weight Management', title: 'Weight Management & Conditioning', icon: '🔥', desc: 'High-tempo active flows for cardiovascular output and metabolic vitality.' },
+  { id: 'Post-Injury Recovery & Rehabilitation', title: 'Injury Recovery & Joint Care', icon: '🩹', desc: 'Low-impact sequences and joint protection modifications for safe training.' }
 ]
 
 const YOGA_STYLES = [
-  { id: 'Hatha', label: 'Hatha Yoga', icon: '☀️', desc: 'Classic foundational alignment' },
-  { id: 'Vinyasa', label: 'Vinyasa Flow', icon: '🌊', desc: 'Breath-synchronized fluid transitions' },
-  { id: 'Yin Yoga', label: 'Yin Yoga', icon: '🌙', desc: 'Deep passive connective tissue holds' },
-  { id: 'Restorative', label: 'Restorative Yoga', icon: '🛋️', desc: 'Ultra-gentle supported relaxation' },
-  { id: 'Ashtanga', label: 'Ashtanga Yoga', icon: '⚡', desc: 'Dynamic energetic structured flow' },
-  { id: 'Power Yoga', label: 'Power Yoga', icon: '🔥', desc: 'High-energy strength and stamina' },
-  { id: 'Kundalini', label: 'Kundalini', icon: '🐍', desc: 'Kriyas, mantra, and breath energy' },
-  { id: 'Chair Yoga', label: 'Chair & Accessible', icon: '🪑', desc: 'Low impact, seated and supported' },
-  { id: 'Meditation & Pranayama', label: 'Pranayama & Meditation', icon: '🫁', desc: 'Breath mastery and quiet reflection' }
+  { id: 'Hatha', label: 'Hatha Alignment', desc: 'Classic structural postures with technique focus' },
+  { id: 'Vinyasa', label: 'Vinyasa Flow', desc: 'Continuous movement linked with active breath' },
+  { id: 'Power Yoga', label: 'Power Yoga', desc: 'High-intensity athletic strength & stamina' },
+  { id: 'Yin Yoga', label: 'Yin & Deep Stretch', desc: 'Targeted passive holds for fascia & connective tissue' },
+  { id: 'Restorative', label: 'Restorative & Recovery', desc: 'Supported, gentle movement for muscle regeneration' },
+  { id: 'Ashtanga', label: 'Ashtanga Flow', desc: 'Progressive, structured athletic sequences' },
+  { id: 'Chair Yoga', label: 'Chair & Accessible Movement', desc: 'Low impact, seated and modified sequences' },
+  { id: 'Meditation & Pranayama', label: 'Breathwork & Pacing', desc: 'Cardiorespiratory control and focus training' }
 ]
 
 const INJURY_AREAS = [
@@ -52,11 +51,10 @@ const INJURY_AREAS = [
 ]
 
 const SOUNDSCAPES = [
-  { id: 'bowls', label: 'Tibetan Singing Bowls', icon: '🥣' },
-  { id: 'rain', label: 'Forest Rain & Birds', icon: '🌧️' },
-  { id: 'sitar', label: 'Gentle Sitar Strings', icon: '🪕' },
-  { id: 'flute', label: 'Zen Bamboo Flute', icon: '🪈' },
-  { id: 'silence', label: 'Pure Silence (Voice Only)', icon: '🔇' }
+  { id: 'ambient', label: 'Light Ambient Pacing' },
+  { id: 'nature', label: 'Natural Soundscape' },
+  { id: 'acoustic', label: 'Gentle Acoustic' },
+  { id: 'silence', label: 'Voice Only (No Background)' }
 ]
 
 const DIET_OPTIONS = [
@@ -1595,11 +1593,11 @@ const Profile = () => {
           <div className="bg-white rounded-card border border-border-ui p-6 md:p-8 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-ui pb-4">
               <div className="space-y-0.5">
-                <h2 className="text-lg font-bold text-navy flex items-center gap-2">
-                  <span>🗑️</span> Delete Account
+                <h2 className="text-base font-bold text-navy">
+                  Delete Account
                 </h2>
                 <p className="text-xs text-text-secondary">
-                  Permanently remove your account, personalized blueprint, and all associated data.
+                  Permanently remove your account, profile, and all associated training records.
                 </p>
               </div>
             </div>
@@ -1607,15 +1605,15 @@ const Profile = () => {
             <div className="bg-surface-2/60 rounded-xl p-4 text-xs text-text-primary space-y-2 border border-border-ui/60">
               <p className="font-bold text-navy">Please note before proceeding:</p>
               <ul className="list-disc list-inside space-y-1 text-text-secondary pl-1">
-                <li>Your personalized yoga recommendations, BMI tracking, and injury safeguards will be deleted.</li>
-                <li>Your saved classes, enrolled courses, and practice progress cannot be recovered.</li>
+                <li>Your personalized class recommendations, BMI history, and injury safeguards will be deleted.</li>
+                <li>Your saved classes, enrolled courses, and training progress cannot be recovered.</li>
                 <li>You can always create a new account in the future if you wish to rejoin.</li>
               </ul>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <p className="text-xs text-text-secondary italic">
-                Just need a break? You can log out anytime and your practice data will remain saved.
+                Need a break? You can simply sign out and your progress will remain saved.
               </p>
               <button
                 type="button"
@@ -1632,9 +1630,7 @@ const Profile = () => {
                     <span>Deleting Account...</span>
                   </>
                 ) : (
-                  <>
-                    <span>Delete My Account</span>
-                  </>
+                  <span>Delete My Account</span>
                 )}
               </button>
             </div>
@@ -1645,8 +1641,8 @@ const Profile = () => {
       {/* ── BOTTOM STICKY SAVE BAR ──────────────────────────────────── */}
       <div className="bg-white rounded-card border border-border-ui p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <span className="w-2 h-2 rounded-full bg-teal animate-pulse"></span>
-          <span>Personalisation syncs across your Dashboard, Recommendations, and AI Coach.</span>
+          <span className="w-2 h-2 rounded-full bg-teal"></span>
+          <span>Preferences sync across your Dashboard, Recommendations, and AI Coach.</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -1659,9 +1655,9 @@ const Profile = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
           >
-            {saving ? 'Saving Changes...' : 'Save Personalisation'}
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -1677,8 +1673,8 @@ const Profile = () => {
               className="bg-white rounded-card max-w-lg w-full p-6 space-y-4 shadow-2xl border border-border-ui"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-navy text-lg flex items-center gap-2">
-                  <span>🎨</span> Select Your Yogi Avatar
+                <h3 className="font-bold text-navy text-base">
+                  Choose Profile Photo
                 </h3>
                 <button
                   type="button"
@@ -1690,7 +1686,7 @@ const Profile = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                {YOGI_AVATARS.map((avatar) => (
+                {AVATAR_PRESETS.map((avatar) => (
                   <button
                     key={avatar.id}
                     type="button"

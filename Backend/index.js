@@ -547,10 +547,10 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
               score += 22;
               matchReasons.push('Dynamic active flow for calorie burn');
             }
-          } else if (goal.includes('spiritual') || goal.includes('mindful') || goal.includes('meditation')) {
-            if (text.includes('kundalini') || text.includes('meditation') || text.includes('pranayama') || text.includes('breath') || text.includes('chakra') || text.includes('mindful')) {
+          } else if (goal.includes('posture') || goal.includes('align') || goal.includes('desk')) {
+            if (text.includes('posture') || text.includes('spine') || text.includes('align') || text.includes('hatha') || text.includes('desk') || text.includes('shoulder') || text.includes('back')) {
               score += 22;
-              matchReasons.push('Deep breathwork & mindfulness integration');
+              matchReasons.push('Corrects posture, spinal alignment & desk tension');
             }
           } else if (goal.includes('recovery') || goal.includes('rehabilitation') || goal.includes('injury')) {
             if (text.includes('gentle') || text.includes('restorative') || text.includes('therapeutic') || text.includes('chair') || text.includes('healing') || text.includes('safe')) {
