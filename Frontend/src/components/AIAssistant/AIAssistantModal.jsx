@@ -5,15 +5,61 @@ import useAuth from '../../hooks/useAuth'
 
 const DEFAULT_PROMPTS = [
   'What should I train today?',
+  'Book 1-to-1 personal training',
+  'Start 60-day core challenge',
   'Find a 20-minute mobility session',
-  'Recommend something for beginners',
-  'Breathing & stress relief routine',
   'Desk posture fix for back pain',
+  'Breathing & stress relief routine',
 ]
 
 // Intelligent yoga AI response generator
 const getAIResponse = (userPrompt, userName) => {
   const q = userPrompt.toLowerCase()
+
+  // 1-to-1 Personal Coaching / Private Training Intent
+  if (
+    q.includes('1-to-1') ||
+    q.includes('1-on-1') ||
+    q.includes('personal training') ||
+    q.includes('private') ||
+    q.includes('personal coach') ||
+    q.includes('hire a coach')
+  ) {
+    return {
+      text: `Hello ${userName || 'friend'}! Mass group classes are great, but personalized 1-to-1 training is the gold standard for targeted transformation:
+
+• **Live Biomechanical Form Correction:** Ensure zero joint wear in downward dog, chaturanga, and warrior poses.
+• **Custom Injury Safeguards:** If you experience lower back, neck, or wrist tension, your coach designs safe regressions.
+• **Goal-Accelerated Progression:** Master specific postures like handstands, splits, or deep backbends with undivided attention.
+
+You can book a private 45-minute live HD video slot with any of our certified coaches right now!`,
+      action: { label: 'Book 1-to-1 Private Session', to: '/dashboard/personal-training' },
+    }
+  }
+
+  // Free Goal Programs & Multi-Day Challenges Intent
+  if (
+    q.includes('challenge') ||
+    q.includes('60 day') ||
+    q.includes('30 day') ||
+    q.includes('21 day') ||
+    q.includes('abs') ||
+    q.includes('goal plan') ||
+    q.includes('free program') ||
+    q.includes('routine plan')
+  ) {
+    return {
+      text: `Looking to build lasting consistency? We offer 100% free progressive goal challenges designed just like elite fitness habit apps:
+
+1. **60-Day Core, Abs & Functional Strength:** Isometric plank progressions, Navasana power holds, and transverse abdominis sculpting (25 min/day).
+2. **30-Day Mobility & Posture Reset:** Reverse desk hunching, open tight hips, and decompress thoracic vertebrae (20 min/day).
+3. **21-Day Flexibility & Hamstring Range:** Safe fascia release and hip mobility (25 min/day).
+4. **14-Day Stress Relief & Breathwork:** Vagal nerve stimulation and deep restorative parasympathetic recovery (18 min/day).
+
+Every program tracks your daily streak, provides day-by-day exercise sequences, and costs zero!`,
+      action: { label: 'Explore Free Goal Programs', to: '/dashboard/training-plan' },
+    }
+  }
 
   if (q.includes('what should i train') || q.includes('today') || q.includes('plan')) {
     const hours = new Date().getHours()
@@ -25,8 +71,8 @@ const getAIResponse = (userPrompt, userName) => {
 2. **Main Practice (15-20 min):** Sun Salutations A & B followed by a grounding Warrior sequence for balance and hip mobility.
 3. **Cool-down (5 min):** Child's Pose & Supine Spinal Twist for nervous system recovery.
 
-Would you like to explore on-demand classes matching this routine?`,
-      action: { label: 'Explore Today\'s Classes', to: '/classes' },
+Would you like to explore on-demand classes or launch your active goal challenge?`,
+      action: { label: 'View My Daily Challenge Plan', to: '/dashboard/training-plan' },
     }
   }
 
@@ -41,7 +87,7 @@ Would you like to explore on-demand classes matching this routine?`,
 • **Sphinx Pose:** 10 breaths to strengthen the lower back.
 
 Consistency is key! Just 15-20 minutes daily reduces stiffness by up to 60%.`,
-      action: { label: 'View Mobility Classes', to: '/classes' },
+      action: { label: 'Join 30-Day Posture Reset', to: '/dashboard/training-plan' },
     }
   }
 
@@ -78,8 +124,10 @@ Our mind-body instructors have specialized breathwork classes designed for fast 
 • **High Plank to Forearm Plank:** 3 sets of 45 seconds. Keep hips level and core engaged.
 • **Navasana (Boat Pose):** 3 rounds of 30 seconds to target the transverse abdominis.
 • **Warrior III (Virabhadrasana III):** 5 breaths per leg to build ankle stability and posterior chain power.
-• **Side Plank (Vasisthasana):** 30 seconds per side for oblique and shoulder girdle stability.`,
-      action: { label: 'Explore Power Yoga', to: '/classes' },
+• **Side Plank (Vasisthasana):** 30 seconds per side for oblique and shoulder girdle stability.
+
+You can also enroll in our 60-Day Core & Abs functional challenge!`,
+      action: { label: 'Start 60-Day Core Challenge', to: '/dashboard/training-plan' },
     }
   }
 
@@ -87,10 +135,11 @@ Our mind-body instructors have specialized breathwork classes designed for fast 
     return {
       text: `Your personalized yoga profile is calibrated with your onboarding goals, fitness level, and preferred practice style!
 
-Head over to your personalized Recommendations hub to view all matched courses, instructor pairings, and session schedules customized for you.`,
+Head over to your personalized Recommendations hub to view all matched courses, 1-to-1 coaching slots, and free challenge programs customized for you.`,
       action: { label: 'Go to My Recommendations', to: '/dashboard/recommendations' },
     }
   }
+
 
   // Fallback response
   return {

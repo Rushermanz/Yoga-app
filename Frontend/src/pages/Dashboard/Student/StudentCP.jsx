@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import useUser from '../../../hooks/useUser'
+import useAxiosSecure from '../../../hooks/useAxiosSecure'
 
 const getGreeting = () => {
   const hour = new Date().getHours()
@@ -9,28 +10,61 @@ const getGreeting = () => {
   return 'Good evening'
 }
 
-const todayClass = {
-  title: 'Mobility Reset',
-  duration: 25,
-  level: 'Beginner',
-  progress: 0,
-  instructor: 'Rohan Kumar',
-}
-
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const weekActivity = [true, false, true, false, false, false, false] // done days
-
-const upcomingAppointment = {
-  type: '1-to-1 Mobility Session',
-  instructor: 'Rohan Kumar',
-  time: 'Thursday · 6:30 PM',
-  initials: 'RK',
-}
 
 const StudentCP = () => {
   const { currentUser } = useUser()
+  const axiosSecure = useAxiosSecure()
+
+  const [activePlan, setActivePlan] = useState(null)
+  const [upcomingSession, setUpcomingSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
   const firstName = currentUser?.name?.split(' ')[0] || 'there'
   const isInstructor = currentUser?.role === 'instructor'
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchStudentData = async () => {
+      try {
+        const [planRes, sessRes] = await Promise.all([
+          axiosSecure.get('/api/user-programs/active').catch(() => ({ data: { active: false } })),
+          axiosSecure.get('/api/appointments/my-sessions').catch(() => ({ data: [] })),
+        ])
+
+        if (isMounted) {
+          if (planRes.data?.active) {
+            setActivePlan(planRes.data)
+          }
+          const validSessions = Array.isArray(sessRes.data)
+            ? sessRes.data.filter((s) => s.status !== 'cancelled')
+            : []
+          if (validSessions.length > 0) {
+            setUpcomingSession(validSessions[0])
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching student dashboard widgets:', err)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    fetchStudentData()
+    return () => {
+      isMounted = false
+    }
+  }, [axiosSecure])
+
+  // Compute dynamic day of week activity
+  const dayIndex = (new Date().getDay() + 6) % 7 // Mon=0, Sun=6
+  const weekActivity = weekDays.map((_, i) => i <= dayIndex)
+
+  const program = activePlan?.program
+  const enrollment = activePlan?.enrollment
+  const nextDay = enrollment?.nextDay || 1
+  const percentage = enrollment?.percentage || 0
+  const streak = enrollment?.streak || 0
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -50,7 +84,9 @@ const StudentCP = () => {
           <p className="text-sm text-text-secondary mt-0.5">
             {isInstructor
               ? 'Your personal practice space. Track your mat sessions, recommendations, and goals alongside your teaching.'
-              : "You're 2 sessions away from this week's target."}
+              : streak > 0
+              ? `You are on an active ${streak}-day streak! Keep up your consistency.`
+              : 'Welcome back to your daily fitness and yoga practice hub.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
@@ -98,75 +134,113 @@ const StudentCP = () => {
       ) : (
         <div className="bg-teal-100/40 border border-teal/30 rounded-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal text-white flex items-center justify-center font-bold text-base shadow-xs">
-              ⚡
-            </div>
+            <span className="text-2xl">🎯</span>
             <div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Personalized Training Active</p>
-                {currentUser.onboardingProfile?.hasInjuries === 'yes' && currentUser.onboardingProfile?.injuryAreas?.length > 0 && (
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-coral-100 text-coral">
-                    Safeguards ({currentUser.onboardingProfile.injuryAreas.length})
-                  </span>
-                )}
-              </div>
-              <p className="text-sm font-bold text-navy">
-                Goal: {currentUser.onboardingProfile?.primaryGoal || 'Movement & Mobility'} · {currentUser.onboardingProfile?.yogaExperience || 'Beginner'} ({currentUser.onboardingProfile?.yogaStyle || 'Flow'})
-                {currentUser.onboardingProfile?.bmi ? ` · BMI: ${currentUser.onboardingProfile.bmi} (${currentUser.onboardingProfile.bmiCategory || 'Normal'})` : ''}
+              <p className="text-xs font-bold uppercase tracking-wider text-teal-700">Target Goal Calibrated</p>
+              <p className="text-sm font-semibold text-navy">
+                {currentUser?.onboardingProfile?.primaryGoal || 'Athletic Mobility'}{' '}
+                <span className="text-xs font-normal text-text-secondary">
+                  · {currentUser?.onboardingProfile?.preferredDuration || '25'} min/day target
+                </span>
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
-              to="/dashboard/recommendations"
-              className="px-3.5 py-1.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors shadow-xs"
+              to="/dashboard/training-plan"
+              className="text-xs font-bold px-3 py-1.5 bg-coral text-white rounded-btn hover:bg-coral-600 transition-colors shadow-xs"
             >
-              Recommended Classes
+              Goal Challenges
             </Link>
             <Link
-              to="/dashboard/profile"
-              className="px-3 py-1.5 border border-border-ui hover:border-teal text-xs font-bold text-navy hover:text-teal bg-white rounded-btn transition-colors shadow-xs"
+              to="/dashboard/recommendations"
+              className="text-xs font-bold px-3 py-1.5 bg-teal text-white rounded-btn hover:bg-teal-600 transition-colors shadow-xs"
             >
-              Profile & Settings
+              Recommendations
             </Link>
           </div>
         </div>
       )}
 
+      {/* Primary Row: Goal Program & Weekly Goal */}
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Today's Plan */}
-        <div className="md:col-span-2 bg-white rounded-card border border-border-ui p-5">
-          <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-3">Today's Plan</p>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="#12B8A6"/></svg>
+        {/* Today's Goal Program Plan */}
+        <div className="md:col-span-2 bg-white rounded-card border border-border-ui p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">
+                {activePlan?.active ? 'Active Goal Challenge' : "Today's Plan"}
+              </p>
+              {activePlan?.active && (
+                <span className="text-[11px] font-bold text-coral flex items-center gap-1">
+                  🔥 {streak} Day Streak
+                </span>
+              )}
             </div>
-            <div className="flex-1">
-              <p className="font-bold text-text-primary">{todayClass.title}</p>
-              <p className="text-sm text-text-secondary">{todayClass.duration} min · {todayClass.level} · with {todayClass.instructor}</p>
+
+            {activePlan?.active && program ? (
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-coral-100 text-coral rounded-xl flex items-center justify-center flex-shrink-0 font-black text-sm shadow-xs">
+                  D{nextDay}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-text-primary truncate">
+                    {activePlan.nextDayDetails?.title || `Day ${nextDay}: ${program.title}`}
+                  </p>
+                  <p className="text-xs text-text-secondary">
+                    {program.title} · {program.dailyMinutes} min · {program.level}
+                  </p>
+                </div>
+                <Link
+                  to="/dashboard/training-plan"
+                  className="px-4 py-2 bg-coral text-white text-xs font-bold rounded-btn hover:bg-coral-600 transition-colors flex-shrink-0 inline-block shadow-xs"
+                >
+                  Start Day {nextDay}
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-teal-100 text-teal rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="#12B8A6"/></svg>
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-text-primary">Choose a Free Goal Challenge</p>
+                  <p className="text-xs text-text-secondary">
+                    Like "60-Day Core & Abs" or "30-Day Posture Reset" to unlock daily guided tasks.
+                  </p>
+                </div>
+                <Link
+                  to="/dashboard/training-plan"
+                  className="px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors flex-shrink-0 inline-block shadow-xs"
+                >
+                  Pick Plan
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <div className="bg-surface-2 rounded-full h-1.5">
+              <div
+                className="bg-teal h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${activePlan?.active ? percentage : 0}%` }}
+              ></div>
             </div>
-            <Link
-              to="/dashboard/enrolled-class"
-              className="px-4 py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors flex-shrink-0 inline-block"
-            >
-              {todayClass.progress > 0 ? 'Resume' : 'Start'}
-            </Link>
+            <div className="flex justify-between items-center mt-1.5 text-xs text-text-secondary">
+              <span>{activePlan?.active ? `${percentage}% program completed` : '0% complete'}</span>
+              {activePlan?.active && <span>Day {nextDay} of {program?.durationDays}</span>}
+            </div>
           </div>
-          <div className="mt-4 bg-surface-2 rounded-full h-1.5">
-            <div className="bg-teal h-1.5 rounded-full transition-all duration-500" style={{ width: `${todayClass.progress}%` }}></div>
-          </div>
-          {todayClass.progress === 0 ? (
-            <p className="text-xs text-text-secondary mt-1.5">Not started yet</p>
-          ) : (
-            <p className="text-xs text-text-secondary mt-1.5">{todayClass.progress}% complete</p>
-          )}
         </div>
 
         {/* Weekly Goal */}
         <div className="bg-white rounded-card border border-border-ui p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-3">Weekly Goal</p>
-          <p className="text-3xl font-bold text-navy">3 <span className="text-text-secondary text-xl font-medium">/ 5</span></p>
-          <p className="text-xs text-text-secondary mb-3">sessions this week</p>
+          <p className="text-3xl font-bold text-navy">
+            {streak > 0 ? Math.min(5, streak) : 3}{' '}
+            <span className="text-text-secondary text-xl font-medium">/ 5</span>
+          </p>
+          <p className="text-xs text-text-secondary mb-3">sessions target</p>
           <div className="flex gap-1.5">
             {weekDays.map((d, i) => (
               <div key={d} className="flex-1 flex flex-col items-center gap-1">
@@ -178,17 +252,33 @@ const StudentCP = () => {
         </div>
       </div>
 
-      {/* Second row */}
+      {/* Second row: Training Stats & Next Appointment */}
       <div className="grid md:grid-cols-3 gap-4">
         {/* Training Stats */}
         <div className="md:col-span-2 bg-white rounded-card border border-border-ui p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Training Stats</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Minutes trained', value: '147', color: 'text-teal' },
-              { label: 'Classes done',    value: '12',  color: 'text-navy' },
-              { label: 'Day streak',      value: '5',   color: 'text-coral' },
-              { label: 'Plan progress',   value: '60%', color: 'text-blue-ai' },
+              {
+                label: 'Minutes trained',
+                value: activePlan?.active ? (enrollment?.completedDays?.length || 0) * (program?.dailyMinutes || 25) : '0',
+                color: 'text-teal',
+              },
+              {
+                label: 'Sessions done',
+                value: activePlan?.active ? `${enrollment?.completedDays?.length || 0}` : '0',
+                color: 'text-navy',
+              },
+              {
+                label: 'Active streak',
+                value: `${streak}d`,
+                color: 'text-coral',
+              },
+              {
+                label: 'Goal plan progress',
+                value: `${percentage}%`,
+                color: 'text-blue-ai',
+              },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-bg-base rounded-xl p-3">
                 <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -198,22 +288,67 @@ const StudentCP = () => {
           </div>
         </div>
 
-        {/* Next Appointment */}
-        <div className="bg-white rounded-card border border-border-ui p-5">
-          <p className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-3">Next Appointment</p>
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal font-bold flex-shrink-0">
-              {upcomingAppointment.initials}
+        {/* Next Appointment / 1-to-1 Private Session */}
+        <div className="bg-white rounded-card border border-border-ui p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-secondary">Next 1-to-1 Session</p>
+              <Link to="/dashboard/personal-training" className="text-[11px] text-teal font-bold hover:underline">
+                Portal →
+              </Link>
             </div>
-            <div>
-              <p className="text-sm font-bold text-text-primary leading-tight">{upcomingAppointment.type}</p>
-              <p className="text-xs text-text-secondary mt-0.5">{upcomingAppointment.time}</p>
-              <p className="text-xs text-teal font-semibold mt-0.5">with {upcomingAppointment.instructor}</p>
-            </div>
+
+            {upcomingSession ? (
+              <div className="flex items-start gap-3">
+                <img
+                  src={upcomingSession.instructorPhoto}
+                  alt={upcomingSession.instructorName}
+                  className="w-10 h-10 rounded-full object-cover border border-teal flex-shrink-0"
+                  onError={(e) => {
+                    e.target.src =
+                      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80'
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-text-primary leading-tight truncate">
+                    {upcomingSession.focusArea || '1-to-1 Coaching'}
+                  </p>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    {upcomingSession.date} · {upcomingSession.timeSlot}
+                  </p>
+                  <p className="text-xs text-teal font-semibold mt-0.5 truncate">
+                    with {upcomingSession.instructorName}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 py-1">
+                <p className="text-sm font-bold text-navy">No Private Session Booked</p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Book 1-on-1 personal training for posture assessment and form corrections focused on you.
+                </p>
+              </div>
+            )}
           </div>
-          <div className="flex gap-2 mt-4">
-            <button className="flex-1 py-1.5 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors">Join</button>
-            <button className="flex-1 py-1.5 border border-border-ui text-xs font-bold rounded-btn hover:border-teal text-text-secondary hover:text-teal transition-colors">Reschedule</button>
+
+          <div className="pt-3 border-t border-border-ui/60 mt-3">
+            {upcomingSession ? (
+              <a
+                href={upcomingSession.meetingLink || 'https://meet.google.com'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors text-center block shadow-sm"
+              >
+                Join Video Call
+              </a>
+            ) : (
+              <Link
+                to="/dashboard/personal-training"
+                className="w-full py-2 bg-navy hover:bg-teal text-white text-xs font-bold rounded-btn transition-colors text-center block shadow-xs"
+              >
+                Book 1-to-1 Coaching
+              </Link>
+            )}
           </div>
         </div>
       </div>

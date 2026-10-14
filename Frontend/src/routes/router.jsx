@@ -28,6 +28,8 @@ import ManageApplications from "../pages/Dashboard/Admin/ManageApplications";
 import LiveClassRoom from "../pages/Dashboard/LiveClass/LiveClassRoom";
 import Onboarding from "../pages/user/Onboarding";
 import Recommendations from "../pages/Dashboard/Student/Recommendations";
+import PersonalTraining from "../pages/Dashboard/PersonalTraining/PersonalTraining";
+import TrainingPlans from "../pages/Dashboard/Programs/TrainingPlans";
 import Profile from "../pages/Dashboard/Profile/Profile";
 
 
@@ -92,6 +94,14 @@ export const router = createBrowserRouter([
       {
         path: "recommendations",
         element: <Recommendations />
+      },
+      {
+        path: "personal-training",
+        element: <PersonalTraining />
+      },
+      {
+        path: "training-plan",
+        element: <TrainingPlans />
       },
       {
         path: "onboarding",

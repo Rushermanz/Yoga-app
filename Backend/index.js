@@ -89,6 +89,10 @@ async function run() {
     const paymentCollection = database.collection("payments");
     const appliedCollection = database.collection("applied");
     const reviewsCollection = database.collection("reviews");
+    const appointmentsCollection = database.collection("appointments");
+    const userProgramsCollection = database.collection("user_programs");
+
+    const { FREE_PROGRAMS } = require("./data/programsData");
 
 
     
@@ -1509,14 +1513,483 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
                 res.status(500).send({ error: true, message: err.message });
               }
             });
-  
 
+            // ════════════════════════════════════════════════════════════════════════════
+            // ── FREE GOAL-ORIENTED PROGRAMS & CHALLENGES (Promt.docx Sections 8 & 36) ──
+            // ════════════════════════════════════════════════════════════════════════════
 
+            // Get list of all free goal programs
+            app.get("/api/programs", (req, res) => {
+              try {
+                const programOverviews = FREE_PROGRAMS.map(p => ({
+                  id: p.id,
+                  title: p.title,
+                  subtitle: p.subtitle,
+                  durationDays: p.durationDays,
+                  dailyMinutes: p.dailyMinutes,
+                  level: p.level,
+                  primaryGoal: p.primaryGoal,
+                  category: p.category,
+                  image: p.image,
+                  tag: p.tag,
+                  badgeColor: p.badgeColor,
+                  overview: p.overview,
+                  benefits: p.benefits,
+                  totalWeeks: p.weeks?.length || 0
+                }));
+                res.send(programOverviews);
+              } catch (err) {
+                console.error("Error fetching programs:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Get specific program with full day-by-day curriculum
+            app.get("/api/programs/:id", (req, res) => {
+              try {
+                const program = FREE_PROGRAMS.find(p => p.id === req.params.id);
+                if (!program) {
+                  return res.status(404).send({ error: true, message: "Program not found" });
+                }
+                res.send(program);
+              } catch (err) {
+                console.error("Error fetching program details:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Get user's active enrolled program with tracking progress
+            app.get("/api/user-programs/active", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access: No email in token" });
+                }
+
+                const enrollment = await userProgramsCollection.findOne({
+                  userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") },
+                  status: "active"
+                });
+
+                if (!enrollment) {
+                  return res.send({ active: false, message: "No active program enrolled" });
+                }
+
+                const program = FREE_PROGRAMS.find(p => p.id === enrollment.programId);
+                if (!program) {
+                  return res.send({ active: false, message: "Program not found" });
+                }
+
+                const completedDays = Array.isArray(enrollment.completedDays) ? enrollment.completedDays : [];
+                const totalDays = program.durationDays || 30;
+                const completedCount = completedDays.length;
+                const percentage = Math.min(100, Math.round((completedCount / totalDays) * 100));
+
+                // Find next incomplete day (or day 1 if none completed, or totalDays if done)
+                let nextDay = 1;
+                for (let d = 1; d <= totalDays; d++) {
+                  if (!completedDays.includes(d)) {
+                    nextDay = d;
+                    break;
+                  }
+                }
+
+                // Look up next day details from curriculum
+                let nextDayDetails = null;
+                for (const wk of program.weeks || []) {
+                  const match = wk.days?.find(item => item.day === nextDay);
+                  if (match) {
+                    nextDayDetails = { ...match, weekTheme: wk.theme };
+                    break;
+                  }
+                }
+
+                res.send({
+                  active: true,
+                  enrollment: {
+                    ...enrollment,
+                    percentage,
+                    completedCount,
+                    totalDays,
+                    nextDay
+                  },
+                  program,
+                  nextDayDetails
+                });
+              } catch (err) {
+                console.error("Error getting active user program:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Enroll in a free goal-oriented program
+            app.post("/api/user-programs/enroll", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                const { programId } = req.body;
+
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+                if (!programId) {
+                  return res.status(400).send({ error: true, message: "Program ID is required" });
+                }
+
+                const program = FREE_PROGRAMS.find(p => p.id === programId);
+                if (!program) {
+                  return res.status(404).send({ error: true, message: "Program not found" });
+                }
+
+                // Mark any currently active program for this user as 'switched'
+                await userProgramsCollection.updateMany(
+                  { userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") }, status: "active" },
+                  { $set: { status: "switched", switchedAt: new Date() } }
+                );
+
+                // Insert or re-activate new program enrollment
+                const newEnrollment = {
+                  userEmail: userEmail.trim(),
+                  programId,
+                  programTitle: program.title,
+                  durationDays: program.durationDays,
+                  status: "active",
+                  enrolledAt: new Date(),
+                  completedDays: [],
+                  streak: 0,
+                  lastCompletedDate: null
+                };
+
+                const result = await userProgramsCollection.insertOne(newEnrollment);
+                res.send({
+                  success: true,
+                  message: `Successfully enrolled in ${program.title}`,
+                  enrollment: newEnrollment,
+                  insertedId: result.insertedId
+                });
+              } catch (err) {
+                console.error("Error enrolling in program:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Complete a day in the active program
+            app.post("/api/user-programs/complete-day", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                const { programId, day } = req.body;
+                const dayNum = parseInt(day, 10);
+
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+                if (!dayNum || dayNum < 1) {
+                  return res.status(400).send({ error: true, message: "Valid day number is required" });
+                }
+
+                const enrollment = await userProgramsCollection.findOne({
+                  userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") },
+                  status: "active"
+                });
+
+                if (!enrollment) {
+                  return res.status(404).send({ error: true, message: "No active program found" });
+                }
+
+                let completedDays = Array.isArray(enrollment.completedDays) ? enrollment.completedDays : [];
+                let streak = enrollment.streak || 0;
+                const now = new Date();
+                const todayStr = now.toISOString().split("T")[0];
+
+                if (!completedDays.includes(dayNum)) {
+                  completedDays.push(dayNum);
+                  completedDays.sort((a, b) => a - b);
+
+                  // Calculate streak
+                  if (enrollment.lastCompletedDate) {
+                    const lastDate = new Date(enrollment.lastCompletedDate);
+                    const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 0) {
+                      // Same day session, keep streak
+                    } else if (diffDays === 1) {
+                      streak += 1;
+                    } else {
+                      streak = 1;
+                    }
+                  } else {
+                    streak = 1;
+                  }
+                }
+
+                const isFullyCompleted = completedDays.length >= (enrollment.durationDays || 30);
+
+                const updateDoc = {
+                  $set: {
+                    completedDays,
+                    streak,
+                    lastCompletedDate: now,
+                    status: isFullyCompleted ? "completed" : "active",
+                    updatedAt: now
+                  }
+                };
+
+                await userProgramsCollection.updateOne({ _id: enrollment._id }, updateDoc);
+
+                res.send({
+                  success: true,
+                  message: `Day ${dayNum} marked as complete! Keep up the momentum.`,
+                  completedDays,
+                  streak,
+                  isFullyCompleted
+                });
+              } catch (err) {
+                console.error("Error completing program day:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Reset active program progress
+            app.post("/api/user-programs/reset", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+
+                const result = await userProgramsCollection.updateOne(
+                  { userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") }, status: "active" },
+                  { $set: { completedDays: [], streak: 0, lastCompletedDate: null, updatedAt: new Date() } }
+                );
+
+                res.send({ success: true, message: "Program progress reset successfully", result });
+              } catch (err) {
+                console.error("Error resetting program progress:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // ════════════════════════════════════════════════════════════════════════════
+            // ── 1-TO-1 PERSONAL TRAINING & COACHING (Promt.docx Section 12 & Requirements)
+            // ════════════════════════════════════════════════════════════════════════════
+
+            // Get coaches & instructors available for 1-to-1 personalized sessions
+            app.get("/api/coaching/instructors", async (req, res) => {
+              try {
+                // Fetch registered instructors from users collection
+                let instructors = await userCollection.find({ role: "instructor" }).toArray();
+
+                // If fewer than 3 instructors in users, also check applied/approved or classes collection
+                if (instructors.length < 3) {
+                  const classInstructors = await classesCollection.aggregate([
+                    { $match: { status: "approved" } },
+                    {
+                      $group: {
+                        _id: "$instructorEmail",
+                        name: { $first: "$instructorName" },
+                        email: { $first: "$instructorEmail" }
+                      }
+                    }
+                  ]).toArray();
+
+                  for (const ci of classInstructors) {
+                    if (ci.email && !instructors.some(inst => inst.email?.toLowerCase() === ci.email?.toLowerCase())) {
+                      instructors.push({
+                        _id: ci._id,
+                        name: ci.name,
+                        email: ci.email,
+                        role: "instructor"
+                      });
+                    }
+                  }
+                }
+
+                // Curate coaches with dedicated 1-on-1 private coaching attributes
+                const coachingInstructors = instructors.map((inst, idx) => {
+                  const fallbackSpecialties = [
+                    ["Spinal Alignment", "Injury Rehabilitation", "Mobility Assessments"],
+                    ["Core & Power Conditioning", "Athletic Balance", "Handstand Prep"],
+                    ["Nervous System Recovery", "Thoracic Mobility", "Diaphragmatic Breathwork"],
+                    ["Joint Flexibility", "Desk Posture Correction", "Deep Hip Release"],
+                    ["Vinyasa Flow Dynamics", "Functional Strength", "Calisthenic Preps"]
+                  ];
+
+                  const defaultPhotos = [
+                    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80",
+                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&auto=format&fit=crop&q=80",
+                    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
+                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80"
+                  ];
+
+                  return {
+                    id: inst._id,
+                    name: inst.name || "Master Coach",
+                    email: inst.email,
+                    photoUrl: inst.photoUrl || inst.photoURL || defaultPhotos[idx % defaultPhotos.length],
+                    experience: inst.experience || "8+ Years Certified Athletic Coach",
+                    specialties: inst.skills ? (Array.isArray(inst.skills) ? inst.skills : [inst.skills]) : fallbackSpecialties[idx % fallbackSpecialties.length],
+                    sessionFormat: "1-on-1 HD Video & Real-time Form Correction",
+                    sessionDuration: "45 or 60 Minutes",
+                    rating: 4.9,
+                    reviewCount: 38 + (idx * 14),
+                    sessionRate: "Included with Membership / Pass",
+                    timeSlots: [
+                      "08:00 AM - 08:45 AM",
+                      "10:00 AM - 10:45 AM",
+                      "02:00 PM - 02:45 PM",
+                      "05:30 PM - 06:15 PM",
+                      "07:00 PM - 07:45 PM"
+                    ]
+                  };
+                });
+
+                res.send(coachingInstructors);
+              } catch (err) {
+                console.error("Error fetching coaching instructors:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Book a 1-to-1 private personal training session
+            app.post("/api/appointments", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access: No email in token" });
+                }
+
+                const {
+                  instructorEmail,
+                  instructorName,
+                  instructorPhoto,
+                  sessionType,
+                  focusArea,
+                  date,
+                  timeSlot,
+                  notes,
+                  userPhone,
+                  userExperienceLevel
+                } = req.body;
+
+                if (!instructorEmail || !date || !timeSlot) {
+                  return res.status(400).send({
+                    error: true,
+                    message: "Instructor, session date, and time slot are required to confirm booking."
+                  });
+                }
+
+                const newAppointment = {
+                  userEmail: userEmail.trim(),
+                  userName: req.body.userName || req.decoded?.name || userEmail.split("@")[0],
+                  instructorEmail: instructorEmail.trim(),
+                  instructorName: instructorName || "Master Coach",
+                  instructorPhoto: instructorPhoto || null,
+                  sessionType: sessionType || "1-to-1 Form & Posture Assessment",
+                  focusArea: focusArea || "Core & Functional Mobility",
+                  date: date,
+                  timeSlot: timeSlot,
+                  notes: notes ? notes.trim() : "",
+                  userPhone: userPhone || "",
+                  userExperienceLevel: userExperienceLevel || "All Levels",
+                  meetingLink: `https://meet.google.com/private-coaching-${Math.random().toString(36).substring(2, 7)}`,
+                  status: "confirmed",
+                  bookedAt: new Date()
+                };
+
+                const result = await appointmentsCollection.insertOne(newAppointment);
+
+                res.send({
+                  success: true,
+                  message: "Your 1-to-1 personal coaching session is confirmed!",
+                  appointment: { ...newAppointment, _id: result.insertedId }
+                });
+              } catch (err) {
+                console.error("Error creating 1-to-1 appointment:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Get logged-in user's booked 1-to-1 sessions
+            app.get("/api/appointments/my-sessions", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+
+                const sessions = await appointmentsCollection
+                  .find({ userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") } })
+                  .sort({ bookedAt: -1 })
+                  .toArray();
+
+                res.send(sessions);
+              } catch (err) {
+                console.error("Error fetching my appointments:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Cancel a 1-to-1 private session
+            app.patch("/api/appointments/:id/cancel", verifyJWT, async (req, res) => {
+              try {
+                const userEmail = req.decoded?.email;
+                const id = req.params.id;
+
+                if (!userEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+                if (!ObjectId.isValid(id)) {
+                  return res.status(400).send({ error: true, message: "Invalid appointment ID" });
+                }
+
+                const query = {
+                  _id: new ObjectId(id),
+                  userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") }
+                };
+
+                const updateDoc = {
+                  $set: {
+                    status: "cancelled",
+                    cancelledAt: new Date()
+                  }
+                };
+
+                const result = await appointmentsCollection.updateOne(query, updateDoc);
+
+                if (result.matchedCount === 0) {
+                  return res.status(404).send({ error: true, message: "Appointment not found or not owned by user" });
+                }
+
+                res.send({ success: true, message: "Appointment cancelled successfully", result });
+              } catch (err) {
+                console.error("Error cancelling appointment:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
+            // Get instructor's upcoming private 1-to-1 sessions
+            app.get("/api/appointments/instructor", verifyJWT, async (req, res) => {
+              try {
+                const instructorEmail = req.decoded?.email;
+                if (!instructorEmail) {
+                  return res.status(401).send({ error: true, message: "Unauthorized access" });
+                }
+
+                const sessions = await appointmentsCollection
+                  .find({ instructorEmail: { $regex: new RegExp(`^${instructorEmail.trim()}$`, "i") } })
+                  .sort({ date: 1, bookedAt: -1 })
+                  .toArray();
+
+                res.send(sessions);
+              } catch (err) {
+                console.error("Error fetching instructor appointments:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
 
     // All routes successfully initialized
   } catch (err) {
     console.error("Error setting up routes:", err);
   }
+
 }
 
 run();

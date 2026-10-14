@@ -22,33 +22,37 @@ const adminNavItems = [
 
 const instructorNavItems = [
   { isDivider: true, label: 'Teaching' },
-  { to: '/dashboard/instructor-cp',  label: 'Teaching Overview', icon: IconGrid },
-  { to: '/dashboard/add-class',      label: 'Create Class',      icon: IconPlus },
-  { to: '/dashboard/my-classes',     label: 'Manage My Classes', icon: IconBook },
+  { to: '/dashboard/instructor-cp',      label: 'Teaching Overview',  icon: IconGrid },
+  { to: '/dashboard/add-class',          label: 'Create Class',       icon: IconPlus },
+  { to: '/dashboard/my-classes',         label: 'Manage My Classes',  icon: IconBook },
   { isDivider: true, label: 'My Practice & Learning' },
-  { to: '/dashboard/student-cp',     label: 'Practice Hub',      icon: IconHome },
-  { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/profile',        label: 'Profile & Settings', icon: IconUser },
-  { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
-  { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
-  { to: '/dashboard/my-payments',    label: 'Payment History',   icon: IconCard },
+  { to: '/dashboard/student-cp',         label: 'Practice Hub',       icon: IconHome },
+  { to: '/dashboard/recommendations',    label: 'Recommendations',    icon: IconSparkles },
+  { to: '/dashboard/personal-training',  label: '1-to-1 Coaching',    icon: IconCalendar },
+  { to: '/dashboard/training-plan',      label: 'Free Goal Programs', icon: IconTarget },
+  { to: '/dashboard/profile',            label: 'Profile & Settings', icon: IconUser },
+  { to: '/dashboard/enrolled-class',     label: 'My Training',        icon: IconPlay },
+  { to: '/dashboard/my-selected',        label: 'Saved Classes',      icon: IconBookmark },
+  { to: '/dashboard/my-payments',        label: 'Payment History',    icon: IconCard },
   { isDivider: true, label: 'Explore & Community' },
-  { to: '/dashboard/explore-classes',label: 'Explore Classes',   icon: IconCompass },
-  { to: '/dashboard/instructors',    label: 'Instructors',       icon: IconInstructor },
+  { to: '/dashboard/explore-classes',    label: 'Explore Classes',    icon: IconCompass },
+  { to: '/dashboard/instructors',        label: 'Instructors',        icon: IconInstructor },
 ]
 
 const studentNavItems = [
   { isDivider: true, label: 'My Practice & Learning' },
-  { to: '/dashboard/student-cp',     label: 'Home',              icon: IconGrid },
-  { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/profile',        label: 'Profile & Settings', icon: IconUser },
-  { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
-  { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
-  { to: '/dashboard/my-payments',    label: 'Payments',          icon: IconCard },
+  { to: '/dashboard/student-cp',         label: 'Home',               icon: IconGrid },
+  { to: '/dashboard/recommendations',    label: 'Recommendations',    icon: IconSparkles },
+  { to: '/dashboard/personal-training',  label: '1-to-1 Coaching',    icon: IconCalendar },
+  { to: '/dashboard/training-plan',      label: 'Free Goal Programs', icon: IconTarget },
+  { to: '/dashboard/profile',            label: 'Profile & Settings', icon: IconUser },
+  { to: '/dashboard/enrolled-class',     label: 'My Training',        icon: IconPlay },
+  { to: '/dashboard/my-selected',        label: 'Saved Classes',      icon: IconBookmark },
+  { to: '/dashboard/my-payments',        label: 'Payments',           icon: IconCard },
   { isDivider: true, label: 'Explore & Community' },
-  { to: '/dashboard/explore-classes',label: 'Explore Classes',   icon: IconCompass },
-  { to: '/dashboard/instructors',    label: 'Instructors',       icon: IconInstructor },
-  { to: '/dashboard/apply-instructor',label: 'Become an Instructor', icon: IconBadge },
+  { to: '/dashboard/explore-classes',    label: 'Explore Classes',    icon: IconCompass },
+  { to: '/dashboard/instructors',        label: 'Instructors',        icon: IconInstructor },
+  { to: '/dashboard/apply-instructor',   label: 'Become an Instructor', icon: IconBadge },
 ]
 
 // ── Inline SVG Icons ────────────────────────────────────────
@@ -63,9 +67,12 @@ function IconPlay()       { return <svg width="16" height="16" viewBox="0 0 24 2
 function IconBookmark()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> }
 function IconCard()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M1 10h22" stroke="currentColor" strokeWidth="2"/></svg> }
 function IconBadge()      { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg> }
+function IconCalendar()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> }
+function IconTarget()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> }
 function IconPlus()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg> }
 function IconHome()       { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="2"/><path d="M9 21V12h6v9" stroke="currentColor" strokeWidth="2"/></svg> }
 function IconLogout()     { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2"/><polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/></svg> }
+
 
 // ── NavItem component ────────────────────────────────────────
 const NavItem = ({ to, label, icon: Icon, collapsed }) => (
