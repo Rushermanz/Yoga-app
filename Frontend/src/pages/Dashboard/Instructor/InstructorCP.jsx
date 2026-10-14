@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FiPlus, FiBookOpen, FiArrowRight, FiCompass, FiCreditCard } from 'react-icons/fi'
+import { FiPlus, FiBookOpen, FiArrowRight, FiCompass, FiCreditCard, FiActivity, FiTarget } from 'react-icons/fi'
 import useUser from '../../../hooks/useUser'
 import useAxiosSecure from '../../../hooks/useAxiosSecure'
 
@@ -63,14 +63,14 @@ const InstructorCP = () => {
             to="/dashboard/student-cp"
             className="inline-flex items-center gap-1.5 px-4 py-2 border border-teal/40 bg-teal-50 hover:bg-teal-100 text-teal text-xs font-bold rounded-btn transition-colors shadow-sm"
           >
-            <span>🧘</span>
+            <FiActivity className="w-3.5 h-3.5 text-teal" />
             <span>My Practice Hub</span>
           </Link>
           <Link
             to="/dashboard/recommendations"
             className="inline-flex items-center gap-1.5 px-4 py-2 border border-border-ui bg-white hover:bg-surface-2 text-text-primary text-xs font-semibold rounded-btn transition-colors shadow-sm"
           >
-            <span>✨</span>
+            <FiTarget className="w-3.5 h-3.5 text-teal" />
             <span>Recommendations</span>
           </Link>
           <Link

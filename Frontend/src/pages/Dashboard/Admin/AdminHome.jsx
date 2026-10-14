@@ -3,10 +3,11 @@ import useUser from '../../../hooks/useUser'
 import useAxiosFetch from '../../../hooks/useAxiosFetch'
 import useAxiosSecure from '../../../hooks/useAxiosSecure'
 import { Link } from 'react-router-dom'
+import { FiUsers, FiAward, FiCheckCircle, FiFileText, FiAlertCircle } from 'react-icons/fi'
 
 const MetricCard = ({ label, value, color, bg, icon }) => (
   <div className={`bg-white rounded-card border border-border-ui p-5 flex items-center gap-4`}>
-    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0 text-xl`}>
+    <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0 text-lg`}>
       {icon}
     </div>
     <div>
@@ -59,7 +60,7 @@ const AdminHome = () => {
         <div className="bg-amber-50 border border-amber-200 rounded-card p-4 flex items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl flex-shrink-0">
-              📋
+              <FiAlertCircle className="w-5 h-5 text-amber-700" />
             </div>
             <div>
               <p className="text-sm font-bold text-amber-900">
@@ -81,16 +82,16 @@ const AdminHome = () => {
 
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard label="Registered users"    value={users?.length}         color="text-navy"    bg="bg-teal-100"    icon="👥" />
-        <MetricCard label="Active instructors"  value={stats?.instructors}    color="text-blue-ai" bg="bg-blue-ai-100" icon="🎓" />
-        <MetricCard label="Approved classes"    value={stats?.approvedClasses} color="text-teal"   bg="bg-teal-100"    icon="✅" />
+        <MetricCard label="Registered users"    value={users?.length}         color="text-navy"    bg="bg-teal-100"    icon={<FiUsers className="w-5 h-5 text-teal" />} />
+        <MetricCard label="Active instructors"  value={stats?.instructors}    color="text-blue-ai" bg="bg-blue-ai-100" icon={<FiAward className="w-5 h-5 text-blue-ai" />} />
+        <MetricCard label="Approved classes"    value={stats?.approvedClasses} color="text-teal"   bg="bg-teal-100"    icon={<FiCheckCircle className="w-5 h-5 text-teal" />} />
         <Link to="/dashboard/manage-applications" className="block hover:scale-[1.01] transition-transform">
           <MetricCard 
             label="Instructor applications" 
             value={stats?.pendingApplications !== undefined ? `${stats?.pendingApplications} pending` : '—'} 
             color="text-amber-600" 
             bg="bg-amber-100" 
-            icon="📝" 
+            icon={<FiFileText className="w-5 h-5 text-amber-600" />} 
           />
         </Link>
       </div>

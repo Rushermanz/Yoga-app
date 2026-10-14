@@ -58,27 +58,26 @@ const Hero = () => {
                 id="hero-get-started"
                 className="inline-flex items-center justify-center px-6 py-3 bg-teal text-white font-bold rounded-btn hover:bg-teal-600 transition-all duration-200 hover:shadow-lg hover:shadow-teal/30 text-sm cursor-pointer select-none"
               >
-                Start Your Yoga Journey
+                Find My Plan
               </Link>
-              {!user ? (
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center px-5 py-3 bg-white/10 text-white font-semibold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
-                >
-                  Already registered? Sign In
-                </Link>
-              ) : (
+              <Link
+                to="/classes"
+                className="inline-flex items-center justify-center px-5 py-3 bg-white/10 text-white font-semibold rounded-btn border border-white/20 hover:bg-white/20 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none"
+              >
+                Explore Classes
+              </Link>
+              {user && (
                 <button
                   type="button"
                   onClick={() => setIsAIAssistantOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-ai/20 text-white font-semibold rounded-btn border border-blue-ai/40 hover:bg-blue-ai/30 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none shadow-sm hover:shadow-lg hover:shadow-blue-ai/20 group"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-ai/20 text-white font-semibold rounded-btn border border-blue-ai/40 hover:bg-blue-ai/30 transition-all duration-200 text-sm backdrop-blur-sm cursor-pointer select-none shadow-sm hover:shadow-lg hover:shadow-blue-ai/20 group"
                 >
                   <span className="w-5 h-5 rounded-full bg-blue-ai flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                       <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" />
                     </svg>
                   </span>
-                  <span>Try our AI Assistant</span>
+                  <span>AI Assistant</span>
                 </button>
               )}
             </div>
