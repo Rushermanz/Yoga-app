@@ -1985,6 +1985,383 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
               }
             });
 
+            // ════════════════════════════════════════════════════════════════════════════
+            // ── AI ASSISTANT & SCHEDULING MANAGER API (Promt.docx Section 36 & Requirements)
+            // ════════════════════════════════════════════════════════════════════════════
+            app.post("/api/ai/chat", async (req, res) => {
+              try {
+                const { prompt, conversationHistory = [] } = req.body;
+                if (!prompt || typeof prompt !== "string") {
+                  return res.status(400).send({ error: true, message: "Prompt text is required." });
+                }
+
+                // Check optional authorization header
+                let userEmail = null;
+                const authHeader = req.headers.authorization;
+                if (authHeader && authHeader.startsWith("Bearer ")) {
+                  const token = authHeader.split(" ")[1];
+                  try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    userEmail = decoded?.email;
+                  } catch (e) {}
+                }
+
+                // Gather user context if available
+                let userProfile = null;
+                let activeProgramData = null;
+                let upcomingAppointment = null;
+
+                if (userEmail) {
+                  const userDoc = await userCollection.findOne({
+                    email: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") }
+                  });
+                  if (userDoc?.onboardingProfile) {
+                    userProfile = userDoc.onboardingProfile;
+                  }
+
+                  const enrollment = await userProgramsCollection.findOne({
+                    userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") },
+                    status: "active"
+                  });
+                  if (enrollment) {
+                    const fullProg = FREE_PROGRAMS.find(p => p.id === enrollment.programId);
+                    activeProgramData = {
+                      programTitle: enrollment.programTitle || fullProg?.title,
+                      durationDays: enrollment.durationDays || fullProg?.durationDays,
+                      completedCount: enrollment.completedDays?.length || 0,
+                      streak: enrollment.streak || 0,
+                      nextDay: (enrollment.completedDays?.length || 0) + 1,
+                      programId: enrollment.programId
+                    };
+                  }
+
+                  const nextAppt = await appointmentsCollection
+                    .find({
+                      userEmail: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") },
+                      status: "confirmed"
+                    })
+                    .sort({ date: 1 })
+                    .limit(1)
+                    .toArray();
+                  if (nextAppt.length > 0) {
+                    upcomingAppointment = nextAppt[0];
+                  }
+                }
+
+                const q = prompt.toLowerCase().trim();
+                const userName = userProfile?.name || (userEmail ? userEmail.split("@")[0] : "Yogi");
+
+                // Availability & Profile defaults
+                const prefTime = userProfile?.preferredTimeOfDay || "morning";
+                const prefDuration = userProfile?.preferredDuration || 25;
+                const userGoal = userProfile?.primaryGoal || "Core Strength & Athletic Mobility";
+                const userExp = userProfile?.yogaExperience || "Intermediate";
+
+                let response = {
+                  text: "",
+                  action: null,
+                  schedule: null,
+                  quickSuggestions: []
+                };
+
+                // 1. SCHEDULING & AVAILABILITY MANAGEMENT INTENT
+                if (
+                  q.includes("schedule") ||
+                  q.includes("calendar") ||
+                  q.includes("plan my week") ||
+                  q.includes("availability") ||
+                  q.includes("when should i practice") ||
+                  q.includes("when to train") ||
+                  q.includes("time to workout") ||
+                  q.includes("organize my time") ||
+                  q.includes("weekly plan") ||
+                  q.includes("reschedule")
+                ) {
+                  const morningSlot = "07:15 AM - 07:45 AM";
+                  const eveningSlot = "06:30 PM - 07:00 PM";
+                  const slotTime = prefTime.toLowerCase().includes("evening") ? eveningSlot : morningSlot;
+
+                  const challengeTitle = activeProgramData ? activeProgramData.programTitle : "60-Day Core & Posture";
+                  const nextDayNum = activeProgramData ? activeProgramData.nextDay : 1;
+
+                  response.text = `Here is your **Personalized Weekly Schedule**, optimized for your **${prefTime.toUpperCase()}** availability window (${prefDuration} mins/day) and your focus on **${userGoal}**:
+
+• **Time Slot:** ${slotTime} (tailored to your habit profile)
+• **Active Goal Plan:** ${challengeTitle}
+• **Target Frequency:** 5 days on, 2 active recovery days
+
+I've balanced isometric strength, spinal alignment, and parasympathetic recovery so you avoid joint fatigue and maintain your streak!`;
+
+                  response.schedule = {
+                    title: `Your ${prefTime.toUpperCase()} Weekly Practice Schedule (${prefDuration} min/day)`,
+                    timeSlot: slotTime,
+                    days: [
+                      { day: "Monday", time: slotTime, session: `${challengeTitle} (Day ${nextDayNum})`, type: "Active Challenge", duration: `${prefDuration}m` },
+                      { day: "Tuesday", time: slotTime, session: "Thoracic Mobility & Spinal Decompression", type: "Posture Focus", duration: "20m" },
+                      { day: "Wednesday", time: slotTime, session: `${challengeTitle} (Day ${nextDayNum + 1})`, type: "Active Challenge", duration: `${prefDuration}m` },
+                      { day: "Thursday", time: "Rest / Light", session: "Diaphragmatic Breathwork & Vagal Reset", type: "Recovery", duration: "15m" },
+                      { day: "Friday", time: slotTime, session: `${challengeTitle} (Day ${nextDayNum + 2})`, type: "Active Challenge", duration: `${prefDuration}m` },
+                      { day: "Saturday", time: "Flexible", session: "1-to-1 Private Form Check or Long Flow", type: "Coaching / Flow", duration: "45m" },
+                      { day: "Sunday", time: "Rest", session: "Full Body Myofascial Release & Rest", type: "Rest", duration: "10m" }
+                    ]
+                  };
+
+                  response.action = { label: "View Active Training Plan", to: "/dashboard/training-plan" };
+                  response.quickSuggestions = [
+                    "I only have 15 minutes today",
+                    "Book a 1-to-1 private session",
+                    "Adjust my availability in Profile"
+                  ];
+                }
+
+                // 2. SHORT ON TIME / TIME CONSTRAINTS (10-15 mins)
+                else if (
+                  q.includes("only have 10") ||
+                  q.includes("only have 15") ||
+                  q.includes("short on time") ||
+                  q.includes("quick session") ||
+                  q.includes("express") ||
+                  q.includes("busy today") ||
+                  q.includes("no time")
+                ) {
+                  response.text = `No problem, ${userName}! A 12-minute express micro-routine preserves your neuromuscular adaptations and keeps your daily streak alive:
+
+1. **Cat-Cow Spine Waves (2 min):** Inhale arching thoracic spine, exhale contracting navel to spine.
+2. **Plank to Downward Dog Drives (3 min):** 3 sets of 45s holds to ignite the anterior core.
+3. **Low Lunge Hip Opener (3 min):** 90 seconds per side to reverse desk sitting tightness.
+4. **Child's Pose Decompression (2 min):** Deep nasal breathing to reset cortisol.
+
+Consistent 10-minute micro-habits beat sporadic hour-long workouts every single time!`;
+                  response.action = { label: "Log Today's Quick Session", to: "/dashboard/training-plan" };
+                  response.quickSuggestions = [
+                    "Schedule my workouts for this week",
+                    "Desk posture fix for back pain",
+                    "What is my active streak?"
+                  ];
+                }
+
+                // 3. 1-TO-1 PERSONAL TRAINING & COACHING
+                else if (
+                  q.includes("1-to-1") ||
+                  q.includes("1-on-1") ||
+                  q.includes("personal training") ||
+                  q.includes("private class") ||
+                  q.includes("private session") ||
+                  q.includes("hire coach") ||
+                  q.includes("book coach") ||
+                  q.includes("form correction")
+                ) {
+                  response.text = `Unlike crowded group classes, our **1-to-1 Personalized Coaching** is dedicated 100% to your biomechanics and injury history:
+
+• **Live Real-Time Form Check:** Check spinal neutral in planks, chaturangas, and lunges via private HD video.
+• **Joint & Injury Safeguards:** Custom modifications tailored for lower back, knees, or wrist vulnerability.
+• **Private Booking Engine:** Choose your certified coach, pick a convenient 45-minute slot, and meet 1-on-1.
+• **Rate:** Included with your membership pass.
+
+${upcomingAppointment ? `You already have an appointment booked with **${upcomingAppointment.instructorName}** on **${upcomingAppointment.date} at ${upcomingAppointment.timeSlot}**!` : "You can book a private session with our master coaches right now:"}`;
+                  response.action = { label: "Book 1-to-1 Coaching Session", to: "/dashboard/personal-training" };
+                  response.quickSuggestions = [
+                    "Who are the certified instructors?",
+                    "Schedule my workouts for this week",
+                    "Show my active goal challenge"
+                  ];
+                }
+
+                // 4. FREE GOAL PROGRAMS & MULTI-DAY CHALLENGES (e.g. 60-Day Abs, 30-Day Posture)
+                else if (
+                  q.includes("challenge") ||
+                  q.includes("60 day") ||
+                  q.includes("30 day") ||
+                  q.includes("21 day") ||
+                  q.includes("abs") ||
+                  q.includes("free plan") ||
+                  q.includes("goal program") ||
+                  q.includes("my plan") ||
+                  q.includes("streak") ||
+                  q.includes("today's task") ||
+                  q.includes("today's plan")
+                ) {
+                  if (activeProgramData) {
+                    response.text = `Here is your active challenge status, ${userName}:
+
+• **Current Program:** **${activeProgramData.programTitle}**
+• **Today's Mission:** **Day ${activeProgramData.nextDay}** of ${activeProgramData.durationDays}
+• **Progress:** ${activeProgramData.completedCount} / ${activeProgramData.durationDays} Days Completed
+• **Active Streak:** 🔥 **${activeProgramData.streak} Day${activeProgramData.streak === 1 ? "" : "s"} in a row**
+
+We also offer other free programs you can switch to anytime:
+1. *60-Day Core, Abs & Functional Strength*
+2. *30-Day Mobility & Posture Reset*
+3. *21-Day Flexibility & Hamstring Range*
+4. *14-Day Stress Relief & Breathwork Protocol*
+5. *45-Day Weight Management & Metabolic Flow*`;
+                    response.action = { label: `Start Day ${activeProgramData.nextDay} Challenge`, to: "/dashboard/training-plan" };
+                  } else {
+                    response.text = `We offer 5 structured, 100% free multi-day goal programs built to take you from day 1 to peak consistency:
+
+1. **60-Day Core, Abs & Functional Strength:** Isometric plank progressions, Navasana holds, transverse abdominis definition (25m/day).
+2. **30-Day Mobility & Posture Reset:** Reverse desk hunching, decompress thoracic vertebrae, unlock hip flexors (20m/day).
+3. **21-Day Flexibility & Hamstring Range:** Progressive safe fascia elongation without joint strain (25m/day).
+4. **14-Day Stress Relief & Breathwork:** Down-regulate cortisol with box breathing and parasympathetic recovery (18m/day).
+5. **45-Day Weight Management & Metabolic Flow:** High-tempo active Vinyasa conditioning (30m/day).`;
+                    response.action = { label: "Pick a Free Goal Program", to: "/dashboard/training-plan" };
+                  }
+                  response.quickSuggestions = [
+                    "Schedule my workouts for this week",
+                    "Book 1-to-1 personal training",
+                    "Desk posture fix for back pain"
+                  ];
+                }
+
+                // 5. POSTURE, DESK FATIGUE, BACK PAIN
+                else if (
+                  q.includes("posture") ||
+                  q.includes("desk") ||
+                  q.includes("back pain") ||
+                  q.includes("neck") ||
+                  q.includes("slouch") ||
+                  q.includes("spine")
+                ) {
+                  response.text = `To reverse prolonged desk sitting and computer forward-head posture:
+
+• **Thoracic Extension:** Cactus arms with deep diaphragmatic inhalation (8 reps).
+• **Chin Tucks:** Retract cervical spine straight backward to decompress upper neck vertebrae.
+• **Kneeling Hip Flexor Stretch:** Tilt pelvis posterior to release tight psoas muscles.
+• **Cat-Cow Spine Waves:** 10 cycles articulating vertebrae one by one.
+
+For a permanent posture transformation, check our free **30-Day Mobility & Posture Reset** program!`;
+                  response.action = { label: "View 30-Day Posture Reset", to: "/dashboard/training-plan" };
+                  response.quickSuggestions = [
+                    "Schedule my workouts for this week",
+                    "Book 1-to-1 posture assessment",
+                    "I only have 10 minutes today"
+                  ];
+                }
+
+                // 6. CLASSES, STYLES, LIBRARY
+                else if (
+                  q.includes("class") ||
+                  q.includes("style") ||
+                  q.includes("hatha") ||
+                  q.includes("vinyasa") ||
+                  q.includes("yin") ||
+                  q.includes("ashtanga") ||
+                  q.includes("what styles")
+                ) {
+                  response.text = `Yoga Master features verified classes across major functional movement disciplines:
+
+• **Hatha Yoga:** Precise biomechanical alignment and foundational holds. Perfect for beginners and form mastery.
+• **Vinyasa Flow:** Breath-synchronized dynamic continuous sequencing for calorie burn and endurance.
+• **Power Yoga:** Athletic conditioning, core stabilizers, and isometric strength.
+• **Yin Yoga:** Long-held passive floor postures (3-5 mins) targeting connective fascia and ligaments.
+• **Restorative & Breathwork:** Deep vagal nerve pacing for sleep quality and stress elimination.
+
+Filter by difficulty, intensity, or instructor in our class catalogue!`;
+                  response.action = { label: "Browse Class Library", to: "/classes" };
+                  response.quickSuggestions = [
+                    "How do recommendations work?",
+                    "Book a 1-to-1 private session",
+                    "Start 60-day core challenge"
+                  ];
+                }
+
+                // 7. INSTRUCTORS & BECOMING AN INSTRUCTOR
+                else if (
+                  q.includes("instructor") ||
+                  q.includes("teacher") ||
+                  q.includes("teach") ||
+                  q.includes("apply") ||
+                  q.includes("become an instructor")
+                ) {
+                  response.text = `All Yoga Master instructors are certified athletic movement and yoga specialists.
+
+• **Browse Instructors:** Connect with certified teachers, inspect their credentials, ratings, and course curriculums at \`/instructors\`.
+• **1-to-1 Coaching:** Work privately with instructors for posture assessment and form check at \`/dashboard/personal-training\`.
+• **Teach on Yoga Master:** Are you a certified coach? Submit your credentials, experience, and certifications at \`/dashboard/apply-instructor\` to join our teaching roster!`;
+                  response.action = { label: "View Verified Instructors", to: "/instructors" };
+                  response.quickSuggestions = [
+                    "Book 1-to-1 personal training",
+                    "Become an instructor",
+                    "Schedule my workouts for this week"
+                  ];
+                }
+
+                // 8. PRICING, PASSES, CHECKOUT
+                else if (
+                  q.includes("price") ||
+                  q.includes("cost") ||
+                  q.includes("free") ||
+                  q.includes("membership") ||
+                  q.includes("payment") ||
+                  q.includes("stripe") ||
+                  q.includes("pass")
+                ) {
+                  response.text = `Here is how pricing works on Yoga Master:
+
+• **100% Free Features:** All 5 Goal Challenges (like 60-Day Core, 30-Day Posture Reset), habit streak tracking, and AI coaching are completely free.
+• **Individual Classes:** Priced affordably per instructor with permanent lifetime access.
+• **Safe & Secure Checkout:** Powered by Stripe with encrypted card payments.
+• **1-to-1 Coaching:** Included with your access pass.`;
+                  response.action = { label: "Explore Classes & Passes", to: "/classes" };
+                  response.quickSuggestions = [
+                    "Start free 60-day core challenge",
+                    "Book 1-to-1 personal training",
+                    "Schedule my workouts for this week"
+                  ];
+                }
+
+                // 9. PROFILE & SETTINGS
+                else if (
+                  q.includes("profile") ||
+                  q.includes("setting") ||
+                  q.includes("password") ||
+                  q.includes("delete account") ||
+                  q.includes("injury") ||
+                  q.includes("bmi")
+                ) {
+                  response.text = `You have full control over your data and practice preferences in **Profile & Settings**:
+
+• **Body Metrics & Safeguards:** Update your height, weight, BMI, and specify vulnerable injury areas (lower back, neck, knees) so the AI protects your joints.
+• **Schedule & Availability:** Configure your preferred duration (15 to 45 mins) and practice time (Morning, Afternoon, Evening).
+• **Security:** Update your password or manage account deletion securely.`;
+                  response.action = { label: "Open Profile & Settings", to: "/dashboard/profile" };
+                  response.quickSuggestions = [
+                    "Schedule my workouts for this week",
+                    "What should I train today?",
+                    "Book a 1-to-1 private session"
+                  ];
+                }
+
+                // 10. DEFAULT / GENERAL QUERY FALLBACK
+                else {
+                  response.text = `That is a great question regarding **"${prompt}"**!
+
+As your Yoga Master AI Coach, I can help you with anything on our platform:
+• **Personalized Scheduling:** Plan your training schedule around your availability and target habit.
+• **Free Goal Challenges:** Follow guided 60-Day Core, 30-Day Posture, or 21-Day Flexibility protocols.
+• **1-to-1 Coaching:** Book private live video form correction sessions focused on you.
+• **Class Guidance:** Discover on-demand routines tailored to your experience level and injury safeguards.
+
+How would you like to proceed?`;
+                  response.action = { label: "View Recommendations", to: "/dashboard/recommendations" };
+                  response.quickSuggestions = [
+                    "Schedule my workouts for this week",
+                    "Book 1-to-1 personal training",
+                    "Start 60-day core challenge",
+                    "I only have 15 minutes today"
+                  ];
+                }
+
+                res.send({
+                  success: true,
+                  reply: response
+                });
+              } catch (err) {
+                console.error("Error in AI chat endpoint:", err);
+                res.status(500).send({ error: true, message: err.message });
+              }
+            });
+
     // All routes successfully initialized
   } catch (err) {
     console.error("Error setting up routes:", err);

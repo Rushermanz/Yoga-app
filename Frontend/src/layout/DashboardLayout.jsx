@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import Scroll from '../hooks/useScroll'
 import { HashLoader } from 'react-spinners'
+import AIAssistantModal from '../components/AIAssistant/AIAssistantModal'
 
 // ── Nav items per role ──────────────────────────────────────
 // ── Nav items per role ──────────────────────────────────────
@@ -94,10 +95,12 @@ const NavItem = ({ to, label, icon: Icon, collapsed }) => (
 // ── Main DashboardLayout ─────────────────────────────────────
 const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const [isAIOpen, setIsAIOpen] = useState(false)
   const { logout } = useAuth()
   const { currentUser, isLoading } = useUser()
   const navigate = useNavigate()
   const role = currentUser?.role
+
 
   const navItems =
     role === 'admin'      ? adminNavItems :
@@ -220,18 +223,46 @@ const DashboardLayout = () => {
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-text-secondary hidden sm:block">{currentUser?.email}</span>
+            <span className="text-xs text-text-secondary hidden md:block">{currentUser?.email}</span>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto px-6 py-6">
+        <main className="flex-1 overflow-y-auto px-6 py-6 relative">
           <Scroll />
           <Outlet />
         </main>
+
+        {/* Floating AI Coach Trigger - Elegant athletic design apt to Yoga Master */}
+        <button
+          onClick={() => setIsAIOpen(true)}
+          aria-label="Open AI Coach"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-2.5 bg-navy hover:bg-navy-800 text-white rounded-full shadow-lg shadow-navy/20 border border-teal/40 hover:border-teal transition-all duration-200 group cursor-pointer"
+        >
+          <div className="relative flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-teal group-hover:scale-110 transition-transform">
+              <path
+                d="M12 2L14.7 7.7L21 8.5L16.2 12.8L17.6 19L12 15.8L6.4 19L7.8 12.8L3 8.5L9.3 7.7L12 2Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-teal rounded-full animate-ping opacity-75" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-teal rounded-full" />
+          </div>
+          <span className="text-xs font-bold tracking-tight text-white group-hover:text-teal transition-colors">
+            AI Coach
+          </span>
+        </button>
+
+        {/* AI Assistant Modal */}
+        <AIAssistantModal
+          isOpen={isAIOpen}
+          onClose={() => setIsAIOpen(false)}
+        />
       </div>
     </div>
   )
 }
 
 export default DashboardLayout
+

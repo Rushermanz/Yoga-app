@@ -2,163 +2,169 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
+import useUser from '../../hooks/useUser'
+import useAxiosFetch from '../../hooks/useAxiosFetch'
 
-const DEFAULT_PROMPTS = [
-  'What should I train today?',
+const INITIAL_PROMPTS = [
+  'Schedule my workouts for this week',
+  'What is my active goal challenge?',
   'Book 1-to-1 personal training',
-  'Start 60-day core challenge',
-  'Find a 20-minute mobility session',
+  'I only have 15 minutes today',
   'Desk posture fix for back pain',
-  'Breathing & stress relief routine',
+  'Recommend classes for my profile',
 ]
 
-// Intelligent yoga AI response generator
-const getAIResponse = (userPrompt, userName) => {
-  const q = userPrompt.toLowerCase()
+// Intelligent yoga AI response generator (client-side fallback)
+const getFallbackAIResponse = (userPrompt, userName, profile, activePlan) => {
+  const q = userPrompt.toLowerCase().trim()
+  const prefTime = profile?.preferredTimeOfDay || 'morning'
+  const prefDuration = profile?.preferredDuration || 25
+  const userGoal = profile?.primaryGoal || 'Core Strength & Posture'
+  const activeTitle = activePlan?.program?.title || '60-Day Core, Abs & Functional Strength'
+  const nextDay = activePlan?.enrollment?.nextDay || 1
+  const streak = activePlan?.enrollment?.streak || 0
 
-  // 1-to-1 Personal Coaching / Private Training Intent
+  if (
+    q.includes('schedule') ||
+    q.includes('calendar') ||
+    q.includes('plan my week') ||
+    q.includes('availability') ||
+    q.includes('when should i') ||
+    q.includes('when to train')
+  ) {
+    const slotTime = prefTime.toLowerCase().includes('evening') ? '06:30 PM - 07:00 PM' : '07:15 AM - 07:45 AM'
+    return {
+      text: `Here is your **Personalized Weekly Schedule**, optimized for your **${prefTime.toUpperCase()}** availability window (${prefDuration} mins/day) and your focus on **${userGoal}**:
+
+• **Time Slot:** ${slotTime} (matched to your habit profile)
+• **Active Plan:** ${activeTitle}
+• **Balance:** 5 focused training days + 2 active recovery days
+
+I've balanced dynamic mobility, core endurance, and spinal decompression to keep you consistent without overtraining.`,
+      schedule: {
+        title: `Your ${prefTime.toUpperCase()} Weekly Schedule (${prefDuration} min/day)`,
+        timeSlot: slotTime,
+        days: [
+          { day: 'Monday', time: slotTime, session: `${activeTitle} (Day ${nextDay})`, type: 'Active Challenge', duration: `${prefDuration}m` },
+          { day: 'Tuesday', time: slotTime, session: 'Thoracic Mobility & Spinal Decompression', type: 'Posture Focus', duration: '20m' },
+          { day: 'Wednesday', time: slotTime, session: `${activeTitle} (Day ${nextDay + 1})`, type: 'Active Challenge', duration: `${prefDuration}m` },
+          { day: 'Thursday', time: 'Rest / Light', session: 'Diaphragmatic Breathwork & Vagal Reset', type: 'Recovery', duration: '15m' },
+          { day: 'Friday', time: slotTime, session: `${activeTitle} (Day ${nextDay + 2})`, type: 'Active Challenge', duration: `${prefDuration}m` },
+          { day: 'Saturday', time: 'Flexible', session: '1-to-1 Private Form Check or Long Flow', type: 'Coaching / Flow', duration: '45m' },
+          { day: 'Sunday', time: 'Rest', session: 'Full Body Myofascial Release & Rest', type: 'Rest', duration: '10m' },
+        ],
+      },
+      action: { label: 'View Active Training Plan', to: '/dashboard/training-plan' },
+      quickSuggestions: [
+        'I only have 15 minutes today',
+        'Book 1-to-1 personal training',
+        'Adjust availability in Profile',
+      ],
+    }
+  }
+
   if (
     q.includes('1-to-1') ||
     q.includes('1-on-1') ||
     q.includes('personal training') ||
     q.includes('private') ||
-    q.includes('personal coach') ||
-    q.includes('hire a coach')
+    q.includes('coach')
   ) {
     return {
-      text: `Hello ${userName || 'friend'}! Mass group classes are great, but personalized 1-to-1 training is the gold standard for targeted transformation:
+      text: `Hello ${userName}! Our **1-to-1 Personal Coaching** is tailored 100% to you rather than group classes:
 
-• **Live Biomechanical Form Correction:** Ensure zero joint wear in downward dog, chaturanga, and warrior poses.
-• **Custom Injury Safeguards:** If you experience lower back, neck, or wrist tension, your coach designs safe regressions.
-• **Goal-Accelerated Progression:** Master specific postures like handstands, splits, or deep backbends with undivided attention.
-
-You can book a private 45-minute live HD video slot with any of our certified coaches right now!`,
+• **Live Real-time Form Check:** Ensure joint alignment in planks, down dogs, and lunges.
+• **Personal Injury Safeguards:** Custom adaptations for back, knee, or wrist sensitivity.
+• **Private Booking Engine:** 45-minute live HD video session with certified master instructors.
+• **Rate:** Included with your access pass.`,
       action: { label: 'Book 1-to-1 Private Session', to: '/dashboard/personal-training' },
+      quickSuggestions: ['Schedule my workouts for this week', 'What is my active goal challenge?'],
     }
   }
 
-  // Free Goal Programs & Multi-Day Challenges Intent
   if (
     q.includes('challenge') ||
     q.includes('60 day') ||
     q.includes('30 day') ||
-    q.includes('21 day') ||
     q.includes('abs') ||
-    q.includes('goal plan') ||
-    q.includes('free program') ||
-    q.includes('routine plan')
+    q.includes('my plan') ||
+    q.includes('streak') ||
+    q.includes('today')
   ) {
     return {
-      text: `Looking to build lasting consistency? We offer 100% free progressive goal challenges designed just like elite fitness habit apps:
+      text: `Here is your current challenge status, ${userName}:
 
-1. **60-Day Core, Abs & Functional Strength:** Isometric plank progressions, Navasana power holds, and transverse abdominis sculpting (25 min/day).
-2. **30-Day Mobility & Posture Reset:** Reverse desk hunching, open tight hips, and decompress thoracic vertebrae (20 min/day).
-3. **21-Day Flexibility & Hamstring Range:** Safe fascia release and hip mobility (25 min/day).
-4. **14-Day Stress Relief & Breathwork:** Vagal nerve stimulation and deep restorative parasympathetic recovery (18 min/day).
+• **Program:** **${activeTitle}**
+• **Today's Mission:** **Day ${nextDay}**
+• **Active Streak:** 🔥 **${streak} Day${streak === 1 ? '' : 's'} in a row!**
 
-Every program tracks your daily streak, provides day-by-day exercise sequences, and costs zero!`,
-      action: { label: 'Explore Free Goal Programs', to: '/dashboard/training-plan' },
+Keep up the daily momentum to build lifelong athletic habits.`,
+      action: { label: `Start Day ${nextDay} Challenge`, to: '/dashboard/training-plan' },
+      quickSuggestions: ['Schedule my workouts for this week', 'I only have 15 minutes today'],
     }
   }
 
-  if (q.includes('what should i train') || q.includes('today') || q.includes('plan')) {
-    const hours = new Date().getHours()
-    const timeGreeting = hours < 12 ? 'morning' : hours < 17 ? 'afternoon' : 'evening'
+  if (q.includes('only have 10') || q.includes('only have 15') || q.includes('short on time')) {
     return {
-      text: `Good ${timeGreeting}, ${userName || 'friend'}! Based on a balanced routine for today, I recommend:
+      text: `No problem, ${userName}! A 12-minute express micro-routine keeps your streak alive:
 
-1. **Warmup (5 min):** Cat-Cow breathing & Gentle Downward Dog to wake up the spine.
-2. **Main Practice (15-20 min):** Sun Salutations A & B followed by a grounding Warrior sequence for balance and hip mobility.
-3. **Cool-down (5 min):** Child's Pose & Supine Spinal Twist for nervous system recovery.
+1. **Cat-Cow Spine Waves (2 min):** Mobilize cervical & lumbar vertebrae.
+2. **Plank to Down Dog Holds (3 min):** Fire up the transverse abdominis.
+3. **Low Lunge Hip Opener (3 min):** Reverse desk-sitting stiffness.
+4. **Child's Pose Rest (2 min):** Cortisol down-regulation.
 
-Would you like to explore on-demand classes or launch your active goal challenge?`,
-      action: { label: 'View My Daily Challenge Plan', to: '/dashboard/training-plan' },
+Consistent 10-minute micro-habits beat sporadic hour-long workouts every single time!`,
+      action: { label: "Log Today's Quick Session", to: '/dashboard/training-plan' },
+      quickSuggestions: ['Schedule my workouts for this week', 'Book 1-to-1 personal training'],
     }
   }
 
-  if (q.includes('mobility') || q.includes('posture') || q.includes('desk') || q.includes('back')) {
+  if (q.includes('posture') || q.includes('desk') || q.includes('back')) {
     return {
-      text: `Here is a targeted 20-minute Mobility & Posture Routine:
+      text: `Here is an athletic 15-minute Posture & Decompression Protocol:
 
-• **Chest Opener & Cactus Arms:** 8 deep breaths to reverse desk slouching.
-• **Cat-Cow Flow:** 10 cycles linking movement with inhalation/exhalation.
+• **Cactus Arms Chest Opener:** 8 deep breaths with thoracic extension.
+• **Cat-Cow Flow:** 10 cycles linking movement to inhalation/exhalation.
 • **Thread-the-Needle:** 5 breaths per side for thoracic spine rotation.
-• **Low Lunge (Anjaneyasana):** 1 min per side to open tight hip flexors from prolonged sitting.
-• **Sphinx Pose:** 10 breaths to strengthen the lower back.
+• **Low Lunge:** 90s per side to open tight hip flexors.
 
-Consistency is key! Just 15-20 minutes daily reduces stiffness by up to 60%.`,
+Check our free **30-Day Mobility & Posture Reset** for long-term correction!`,
       action: { label: 'Join 30-Day Posture Reset', to: '/dashboard/training-plan' },
+      quickSuggestions: ['Schedule my workouts for this week', 'Book 1-to-1 personal training'],
     }
   }
 
-  if (q.includes('beginner') || q.includes('start') || q.includes('new')) {
-    return {
-      text: `Welcome to your yoga practice! Here are 3 golden guidelines for beginners:
-
-1. **Focus on Breath, Not Perfection:** Breathe smoothly in and out through your nose (Ujjayi breathing).
-2. **Never Force a Pose:** Keep a soft micro-bend in knees and elbows to protect your joints.
-3. **Start with Foundations:** Mountain Pose (Tadasana), Downward-Facing Dog, and Child's Pose form the core of every flow.
-
-I recommend taking our quick 1-minute assessment if you haven't yet, so we can personalize every class for your body!`,
-      action: { label: 'Take 1-Min Assessment', to: '/onboarding' },
-    }
-  }
-
-  if (q.includes('breath') || q.includes('stress') || q.includes('anxiety') || q.includes('relax') || q.includes('calm')) {
-    return {
-      text: `Let's calm your nervous system right now:
-
-• **4-7-8 Pranayama:** Inhale quietly through nose for 4s, hold gently for 7s, exhale completely through mouth for 8s. Repeat 4 rounds.
-• **Balasana (Child's Pose):** Rest forehead on mat, extend arms forward, and breathe deep into the back ribs.
-• **Viparita Karani (Legs-Up-The-Wall):** Spend 5-10 minutes with legs elevated to slow your heart rate and lower cortisol.
-
-Our mind-body instructors have specialized breathwork classes designed for fast stress release.`,
-      action: { label: 'Find Restorative Classes', to: '/classes' },
-    }
-  }
-
-  if (q.includes('strength') || q.includes('core') || q.includes('power')) {
-    return {
-      text: `For functional strength and core endurance:
-
-• **High Plank to Forearm Plank:** 3 sets of 45 seconds. Keep hips level and core engaged.
-• **Navasana (Boat Pose):** 3 rounds of 30 seconds to target the transverse abdominis.
-• **Warrior III (Virabhadrasana III):** 5 breaths per leg to build ankle stability and posterior chain power.
-• **Side Plank (Vasisthasana):** 30 seconds per side for oblique and shoulder girdle stability.
-
-You can also enroll in our 60-Day Core & Abs functional challenge!`,
-      action: { label: 'Start 60-Day Core Challenge', to: '/dashboard/training-plan' },
-    }
-  }
-
-  if (q.includes('recommend') || q.includes('classes') || q.includes('custom')) {
-    return {
-      text: `Your personalized yoga profile is calibrated with your onboarding goals, fitness level, and preferred practice style!
-
-Head over to your personalized Recommendations hub to view all matched courses, 1-to-1 coaching slots, and free challenge programs customized for you.`,
-      action: { label: 'Go to My Recommendations', to: '/dashboard/recommendations' },
-    }
-  }
-
-
-  // Fallback response
   return {
-    text: `That's a great question regarding **"${userPrompt}"**!
+    text: `That is a great question regarding **"${userPrompt}"**!
 
-As your Yoga Master AI Coach, I suggest combining mindful alignment with regular practice. Whether you want to improve flexibility, build core stability, or unwind after a busy day, our instructors provide step-by-step guidance tailored to all levels.
-
-Explore our instructor-led classes or check your customized recommendations in your dashboard!`,
-    action: { label: 'Explore Classes', to: '/classes' },
+As your Yoga Master AI Coach, I can help you with anything across our website:
+• **Weekly Scheduling:** Plan training times tailored to your habit profile (${prefTime}).
+• **1-to-1 Coaching:** Book private live form assessments with master instructors.
+• **Free Goal Programs:** 60-Day Core, 30-Day Posture, and 21-Day Flexibility challenges.
+• **Personalized Recommendations:** Explore scored classes matched to your goals.`,
+    action: { label: 'Explore Recommendations', to: '/dashboard/recommendations' },
+    quickSuggestions: [
+      'Schedule my workouts for this week',
+      'Book 1-to-1 personal training',
+      'What is my active goal challenge?',
+    ],
   }
 }
 
-const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose, initialPrompt = '' }) => {
+const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose }) => {
   const { user } = useAuth()
-  const userName = user?.displayName ? user.displayName.split(' ')[0] : 'Yogi'
+  const { currentUser } = useUser()
+  const axiosFetch = useAxiosFetch()
+
+  const userName = currentUser?.name?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Yogi'
+  const onboardingProfile = currentUser?.onboardingProfile || null
 
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const isControlled = typeof controlledIsOpen === 'boolean'
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+
+  const [activePlan, setActivePlan] = useState(null)
+  const [quickSuggestions, setQuickSuggestions] = useState(INITIAL_PROMPTS)
 
   const handleClose = () => {
     if (isControlled && controlledOnClose) {
@@ -171,13 +177,34 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
     {
       id: 1,
       sender: 'ai',
-      text: `Hi ${userName}! 👋 I'm your Yoga Master AI Assistant. How can I guide your practice or fitness routine today?`,
+      text: `Hi ${userName}! 👋 I'm your Yoga Master AI Coach.
+
+I can organize your **weekly training schedule**, track your **goal challenge tasks & streaks**, connect you with **1-to-1 private coaches**, or answer anything about our platform.
+
+How can I help your practice today?`,
       time: 'Just now',
     },
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const chatEndRef = useRef(null)
+
+  // Fetch active goal program when opened to calibrate context
+  useEffect(() => {
+    if (isOpen && user?.email) {
+      const token = localStorage.getItem('token')
+      axiosFetch
+        .get('/api/user-programs/active', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        .then((res) => {
+          if (res.data?.active) {
+            setActivePlan(res.data)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isOpen, user?.email, axiosFetch])
 
   // Listen for global custom events to open with optional prompt
   useEffect(() => {
@@ -208,7 +235,7 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen])
 
-  const handleSendPrompt = (promptText) => {
+  const handleSendPrompt = async (promptText) => {
     const textToSend = promptText || input.trim()
     if (!textToSend) return
 
@@ -223,25 +250,64 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
     setInput('')
     setIsTyping(true)
 
-    // Simulate AI thinking delay for natural conversational feel
-    setTimeout(() => {
-      const aiReply = getAIResponse(textToSend, userName)
+    try {
+      const token = localStorage.getItem('token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+      // Call backend AI chat endpoint
+      const res = await axiosFetch.post(
+        '/api/ai/chat',
+        { prompt: textToSend },
+        { headers }
+      )
+
+      if (res.data?.success && res.data?.reply) {
+        const reply = res.data.reply
+        const aiMsg = {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: reply.text,
+          action: reply.action,
+          schedule: reply.schedule,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+        setMessages((prev) => [...prev, aiMsg])
+        if (Array.isArray(reply.quickSuggestions) && reply.quickSuggestions.length > 0) {
+          setQuickSuggestions(reply.quickSuggestions)
+        }
+      } else {
+        throw new Error('Fallback')
+      }
+    } catch {
+      // Graceful local intelligence fallback
+      const fallback = getFallbackAIResponse(textToSend, userName, onboardingProfile, activePlan)
       const aiMsg = {
         id: Date.now() + 1,
         sender: 'ai',
-        text: aiReply.text,
-        action: aiReply.action,
+        text: fallback.text,
+        action: fallback.action,
+        schedule: fallback.schedule,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
       setMessages((prev) => [...prev, aiMsg])
+      if (fallback.quickSuggestions) {
+        setQuickSuggestions(fallback.quickSuggestions)
+      }
+    } finally {
       setIsTyping(false)
-    }, 600)
+    }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     handleSendPrompt(input)
   }
+
+  // Active status chips for top bar
+  const activeProgramTitle = activePlan?.program?.title
+  const currentStreak = activePlan?.enrollment?.streak || 0
+  const prefTime = onboardingProfile?.preferredTimeOfDay || 'Morning'
+  const prefDuration = onboardingProfile?.preferredDuration || 25
 
   return (
     <AnimatePresence>
@@ -262,14 +328,14 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-2xl bg-navy-800 border border-white/15 rounded-card shadow-2xl overflow-hidden flex flex-col z-10 max-h-[88vh]"
+            className="relative w-full max-w-2xl bg-navy-800 border border-white/15 rounded-card shadow-2xl overflow-hidden flex flex-col z-10 max-h-[90vh]"
           >
             {/* Header */}
-            <div className="p-4 sm:px-6 sm:py-4 bg-navy/90 border-b border-white/10 flex items-center justify-between gap-3">
+            <div className="p-4 sm:px-6 sm:py-3.5 bg-navy/95 border-b border-white/10 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal to-blue-ai flex items-center justify-center text-white shadow-md">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal via-blue-ai to-coral flex items-center justify-center text-white shadow-md">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                       <path
                         d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
                         fill="currentColor"
@@ -280,28 +346,27 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white tracking-tight">Yoga Master AI Assistant</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-ai/20 text-blue-ai rounded-full border border-blue-ai/30">
-                      Live
+                    <h3 className="text-base font-bold text-white tracking-tight">
+                      Yoga Master AI Assistant
+                    </h3>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-teal/20 text-teal rounded-full border border-teal/30">
+                      Smart Scheduler
                     </span>
                   </div>
-                  <p className="text-xs text-white/60">Instant yoga, posture & training recommendations</p>
+                  <p className="text-xs text-white/60">
+                    Schedules workouts, tracks goal plans & manages 1-to-1 coaching
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <Link
-                  to="/dashboard/recommendations"
+                  to="/dashboard/training-plan"
                   onClick={handleClose}
                   className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-btn bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/15"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                      fill="#12B8A6"
-                    />
-                  </svg>
-                  My Plan
+                  <span>⚡</span>
+                  <span>My Plan</span>
                 </Link>
 
                 <button
@@ -317,41 +382,114 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
               </div>
             </div>
 
+            {/* User Context Strip (shows active plan & habit preferences) */}
+            <div className="px-4 py-2 bg-navy border-b border-white/10 flex items-center justify-between text-[11px] text-white/70 overflow-x-auto no-scrollbar gap-3">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-white/40">Profile Context:</span>
+                <span className="px-2 py-0.5 rounded-full bg-teal/20 text-teal-300 font-bold border border-teal/30 flex items-center gap-1">
+                  <span>🎯</span>
+                  <span className="truncate max-w-[150px]">
+                    {activeProgramTitle || onboardingProfile?.primaryGoal || 'Goal Ready'}
+                  </span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-coral/20 text-coral-300 font-bold border border-coral/30 flex items-center gap-1">
+                  <span>🔥</span>
+                  <span>{currentStreak}d Streak</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-ai/20 text-blue-300 font-bold border border-blue-ai/30 flex items-center gap-1">
+                  <span>⏰</span>
+                  <span className="capitalize">{prefTime} · {prefDuration}m</span>
+                </span>
+              </div>
+
+              <Link
+                to="/dashboard/personal-training"
+                onClick={handleClose}
+                className="text-[11px] text-teal-300 hover:text-teal font-bold flex-shrink-0 underline"
+              >
+                Book 1-to-1 Coach →
+              </Link>
+            </div>
+
             {/* Chat Body */}
-            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[260px] max-h-[50vh]">
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 min-h-[280px] max-h-[52vh]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.sender === 'ai' && (
-                    <div className="w-8 h-8 rounded-lg bg-blue-ai/20 border border-blue-ai/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <div className="w-8 h-8 rounded-lg bg-teal/20 border border-teal/30 flex items-center justify-center flex-shrink-0 mt-0.5 text-teal">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                         <path
                           d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                          fill="#4385F5"
+                          fill="currentColor"
                         />
                       </svg>
                     </div>
                   )}
 
-                  <div className={`max-w-[85%] sm:max-w-[78%] space-y-2`}>
+                  <div className="max-w-[88%] sm:max-w-[82%] space-y-2.5">
                     <div
                       className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
                         msg.sender === 'user'
                           ? 'bg-teal text-white rounded-tr-xs shadow-md'
-                          : 'bg-navy/90 text-white/90 border border-white/10 rounded-tl-xs'
+                          : 'bg-navy/95 text-white/90 border border-white/10 rounded-tl-xs shadow-sm'
                       }`}
                     >
                       {msg.text}
                     </div>
 
+                    {/* Interactive Weekly Schedule Card */}
+                    {msg.schedule && (
+                      <div className="p-3.5 rounded-xl bg-navy/90 border border-teal/40 space-y-2.5 shadow-md text-xs">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                          <span className="font-bold text-teal-300 flex items-center gap-1.5">
+                            <span>📅</span>
+                            <span>{msg.schedule.title}</span>
+                          </span>
+                          <span className="text-[10px] text-white/50">{msg.schedule.timeSlot}</span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {msg.schedule.days?.map((d, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-1.5 rounded bg-white/5 border border-white/10 hover:border-teal/40 transition-colors"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-16 font-bold text-white text-[11px]">{d.day}</span>
+                                <span className="text-white/80 truncate text-[11px]">{d.session}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                                  {d.duration}
+                                </span>
+                                <span
+                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                    d.type.includes('Challenge')
+                                      ? 'bg-coral-100/20 text-coral border border-coral/30'
+                                      : d.type.includes('Recovery') || d.type.includes('Rest')
+                                      ? 'bg-teal-100/20 text-teal border border-teal/30'
+                                      : 'bg-blue-ai-100/20 text-blue-ai border border-blue-ai/30'
+                                  }`}
+                                >
+                                  {d.type}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Button */}
                     {msg.action && (
-                      <div className="pt-1">
+                      <div className="pt-0.5">
                         <Link
                           to={msg.action.to}
                           onClick={handleClose}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-ai text-white text-xs font-bold rounded-btn hover:bg-blue-600 transition-colors shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal text-white text-xs font-bold rounded-btn hover:bg-teal-600 transition-colors shadow-sm"
                         >
                           <span>{msg.action.label}</span>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -369,11 +507,11 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3 items-center">
-                  <div className="w-8 h-8 rounded-lg bg-blue-ai/20 border border-blue-ai/30 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-teal/20 border border-teal/30 flex items-center justify-center flex-shrink-0 text-teal">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path
                         d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                        fill="#4385F5"
+                        fill="currentColor"
                       />
                     </svg>
                   </div>
@@ -389,14 +527,14 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
             </div>
 
             {/* Quick Prompt Chips */}
-            <div className="px-4 py-2.5 bg-navy/60 border-t border-white/10 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <span className="text-[11px] font-semibold text-white/50 flex-shrink-0">Quick ask:</span>
-              {DEFAULT_PROMPTS.map((p) => (
+            <div className="px-4 py-2.5 bg-navy/70 border-t border-white/10 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <span className="text-[11px] font-semibold text-white/50 flex-shrink-0">Suggested:</span>
+              {quickSuggestions.map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => handleSendPrompt(p)}
-                  className="text-xs px-3 py-1 bg-white/5 border border-white/15 text-white/80 rounded-full hover:bg-white/15 hover:text-white transition-all whitespace-nowrap cursor-pointer flex-shrink-0"
+                  className="text-xs px-3 py-1 bg-white/5 border border-white/15 text-white/80 rounded-full hover:bg-teal hover:border-teal hover:text-white transition-all whitespace-nowrap cursor-pointer flex-shrink-0"
                 >
                   {p}
                 </button>
@@ -410,13 +548,13 @@ const AIAssistantModal = ({ isOpen: controlledIsOpen, onClose: controlledOnClose
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about poses, routines, or recommendations..."
+                  placeholder="Ask to schedule your week, check your plan, book coaching, or poses..."
                   className="flex-1 bg-white/5 border border-white/15 rounded-btn px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-teal transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isTyping}
-                  className="px-4 py-2.5 bg-teal text-white font-bold text-sm rounded-btn hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center flex-shrink-0"
+                  className="px-4 py-2.5 bg-teal text-white font-bold text-sm rounded-btn hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center flex-shrink-0 shadow-sm"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
