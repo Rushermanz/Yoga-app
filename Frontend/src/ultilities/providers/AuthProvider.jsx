@@ -1,6 +1,18 @@
 import React, { createContext, useEffect, useState } from 'react'
 import { app } from '../../config/firebase.init';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, signInWithPopup, onAuthStateChanged } from "firebase/auth";
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    signInWithPopup,
+    onAuthStateChanged,
+    updateProfile,
+    updatePassword,
+    deleteUser,
+    reauthenticateWithCredential,
+    EmailAuthProvider
+} from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 import axios from 'axios';
 
@@ -16,29 +28,23 @@ const AuthProvider = ({children}) => {
 
     // signup user
     const signUp = async (email, password) =>{
-    
         try {
             setLoader(true);
             return await createUserWithEmailAndPassword(auth, email, password)
         } catch (error) {
             setError(error.code);
             throw error;
-            
         }
-
     }
 
     // login user
-
     const login = async (email, password) =>{
         try {
             setLoader(true);
             return await signInWithEmailAndPassword(auth, email, password);
-
         } catch (error) {
             setError(error.code);
             console.log(error);
-            
             throw error;
         }
     }
@@ -58,12 +64,36 @@ const AuthProvider = ({children}) => {
         try {
             await updateProfile(auth.currentUser, {
                 displayName: name, photoURL: photo
-              })
-              setUser(auth.currentUser)
+            })
+            setUser(auth.currentUser)
         } catch (error) {
             setError(error.code);
             throw error;
         }
+    }
+
+    // change password
+    const changePassword = async (currentPassword, newPassword) => {
+        if (!auth.currentUser) throw new Error("No authenticated user");
+        const isPasswordProvider = auth.currentUser.providerData?.some(p => p.providerId === 'password');
+        if (isPasswordProvider && currentPassword) {
+            const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+        }
+        await updatePassword(auth.currentUser, newPassword);
+    }
+
+    // delete account
+    const deleteAccount = async (currentPassword) => {
+        if (!auth.currentUser) throw new Error("No authenticated user");
+        const isPasswordProvider = auth.currentUser.providerData?.some(p => p.providerId === 'password');
+        if (isPasswordProvider && currentPassword) {
+            const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+        }
+        await deleteUser(auth.currentUser);
+        localStorage.removeItem('token');
+        setUser(null);
     }
 
     //using google login
@@ -94,14 +124,25 @@ const AuthProvider = ({children}) => {
             } else{
                 localStorage.removeItem('token')
                 setLoader(false)
-
             }
         })
         return () => unsubscribe()
     }, [])
 
-
-    const contextVale = {user, signUp, login, logout, updateUser, googleLogin, error, setError, loader, setLoader}
+    const contextVale = {
+        user,
+        signUp,
+        login,
+        logout,
+        updateUser,
+        googleLogin,
+        changePassword,
+        deleteAccount,
+        error,
+        setError,
+        loader,
+        setLoader
+    }
   return (
     <AuthContext.Provider value={contextVale}>
         {children}

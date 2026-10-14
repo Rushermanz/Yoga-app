@@ -14,6 +14,7 @@ const adminNavItems = [
   { to: '/dashboard/manage-users',        label: 'Users',           icon: IconUsers },
   { to: '/dashboard/manage-class',        label: 'Classes',         icon: IconBook },
   { to: '/dashboard/manage-applications', label: 'Applications',    icon: IconBadge },
+  { to: '/dashboard/profile',             label: 'My Profile & Personalisation', icon: IconUser },
   { isDivider: true, label: 'Explore & Browse' },
   { to: '/dashboard/explore-classes',     label: 'Explore Classes', icon: IconCompass },
   { to: '/dashboard/instructors',         label: 'Instructors',     icon: IconInstructor },
@@ -27,7 +28,7 @@ const instructorNavItems = [
   { isDivider: true, label: 'My Practice & Learning' },
   { to: '/dashboard/student-cp',     label: 'Practice Hub',      icon: IconHome },
   { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/onboarding',     label: 'My Yoga Profile',   icon: IconUser },
+  { to: '/dashboard/profile',        label: 'Profile & Personalisation', icon: IconUser },
   { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
   { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
   { to: '/dashboard/my-payments',    label: 'Payment History',   icon: IconCard },
@@ -40,7 +41,7 @@ const studentNavItems = [
   { isDivider: true, label: 'My Practice & Learning' },
   { to: '/dashboard/student-cp',     label: 'Home',              icon: IconGrid },
   { to: '/dashboard/recommendations',label: 'Recommendations',   icon: IconSparkles },
-  { to: '/dashboard/onboarding',     label: 'My Yoga Profile',   icon: IconUser },
+  { to: '/dashboard/profile',        label: 'Profile & Personalisation', icon: IconUser },
   { to: '/dashboard/enrolled-class', label: 'My Training',       icon: IconPlay },
   { to: '/dashboard/my-selected',    label: 'Saved Classes',     icon: IconBookmark },
   { to: '/dashboard/my-payments',    label: 'Payments',          icon: IconCard },
@@ -198,21 +199,28 @@ const DashboardLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
         <header className="flex-shrink-0 h-14 bg-white border-b border-border-ui flex items-center justify-between px-6">
-          <div className="flex items-center gap-3">
+          <Link to="/dashboard/profile" className="flex items-center gap-3 group">
             {currentUser?.photoURL ? (
-              <img src={currentUser.photoURL} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-border-ui" />
+              <img src={currentUser.photoURL} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-border-ui group-hover:ring-2 group-hover:ring-teal transition-all" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-teal flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-8 h-8 rounded-full bg-teal flex items-center justify-center text-white text-sm font-bold group-hover:bg-teal-600 transition-colors">
                 {currentUser?.name?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
             <div>
-              <p className="text-sm font-bold text-text-primary leading-tight">{currentUser?.name || 'User'}</p>
+              <p className="text-sm font-bold text-text-primary leading-tight group-hover:text-teal transition-colors">{currentUser?.name || 'User'}</p>
               <p className="text-xs text-text-secondary capitalize">{role}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
+          </Link>
+          <div className="flex items-center gap-3">
             <span className="text-xs text-text-secondary hidden sm:block">{currentUser?.email}</span>
+            <Link
+              to="/dashboard/profile"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-100 hover:bg-teal-200 text-teal-800 text-xs font-bold rounded-btn transition-colors border border-teal/30 shadow-xs"
+            >
+              <span>✨</span>
+              <span>Personalisation</span>
+            </Link>
           </div>
         </header>
 

@@ -98,28 +98,36 @@ const StudentCP = () => {
       ) : (
         <div className="bg-teal-100/40 border border-teal/30 rounded-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold text-lg">
+            <div className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center font-bold text-lg shadow-sm">
               🧘
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Personalized Profile Active</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Personalized Blueprint Active</p>
+                {currentUser.onboardingProfile?.hasInjuries === 'yes' && currentUser.onboardingProfile?.injuryAreas?.length > 0 && (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-coral-100 text-coral">
+                    🛡️ Safe Mode ({currentUser.onboardingProfile.injuryAreas.length})
+                  </span>
+                )}
+              </div>
               <p className="text-sm font-bold text-navy">
-                Goal: {currentUser.onboardingProfile?.primaryGoal} ({currentUser.onboardingProfile?.goalPreference}) · BMI: {currentUser.onboardingProfile?.bmi} ({currentUser.onboardingProfile?.bmiCategory})
+                Focus: {currentUser.onboardingProfile?.primaryGoal || 'Mindful Practice'} · {currentUser.onboardingProfile?.yogaExperience || 'Practitioner'} ({currentUser.onboardingProfile?.yogaStyle || 'Flow'})
+                {currentUser.onboardingProfile?.bmi ? ` · BMI: ${currentUser.onboardingProfile.bmi} (${currentUser.onboardingProfile.bmiCategory || 'Normal'})` : ''}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/recommendations"
-              className="px-3.5 py-1.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors"
+              className="px-3.5 py-1.5 bg-teal hover:bg-teal-600 text-white text-xs font-bold rounded-btn transition-colors shadow-xs"
             >
               View Recommendations
             </Link>
             <Link
-              to="/dashboard/onboarding"
-              className="px-3 py-1.5 border border-border-ui hover:border-teal text-xs font-bold text-navy hover:text-teal bg-white rounded-btn transition-colors"
+              to="/dashboard/profile"
+              className="px-3 py-1.5 border border-border-ui hover:border-teal text-xs font-bold text-navy hover:text-teal bg-white rounded-btn transition-colors shadow-xs"
             >
-              Edit Profile
+              Personalise Profile
             </Link>
           </div>
         </div>

@@ -28,6 +28,7 @@ import ManageApplications from "../pages/Dashboard/Admin/ManageApplications";
 import LiveClassRoom from "../pages/Dashboard/LiveClass/LiveClassRoom";
 import Onboarding from "../pages/user/Onboarding";
 import Recommendations from "../pages/Dashboard/Student/Recommendations";
+import Profile from "../pages/Dashboard/Profile/Profile";
 
 
 export const router = createBrowserRouter([
@@ -79,6 +80,14 @@ export const router = createBrowserRouter([
       {
         path: "explore-classes",
         element: <Classes />
+      },
+      {
+        path: "profile",
+        element: <Profile />
+      },
+      {
+        path: "personalisation",
+        element: <Profile />
       },
       {
         path: "recommendations",

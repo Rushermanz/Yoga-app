@@ -153,18 +153,43 @@ app.get('/users/:id', async (req, res) => {
 // GET USER BY EMAIL
 app.get('/user/:email', verifyJWT, async (req, res) => {
     const email = req.params.email;
-    const query = { email: email };
+    const query = { email: { $regex: new RegExp(`^${(email || '').trim()}$`, 'i') } };
     const result = await userCollection.findOne(query);
     res.send(result);
 })
-// Delete a user
-
+// Delete a user (Admin)
 app.delete('/delete-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await userCollection.deleteOne(query);
     res.send(result);
 })
+
+// Delete Own Account (User Self-Deletion)
+app.delete('/api/user/account', verifyJWT, async (req, res) => {
+    try {
+        const userEmail = req.decoded?.email;
+        if (!userEmail) {
+            return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+        }
+
+        const emailFilter = { email: { $regex: new RegExp(`^${userEmail.trim()}$`, 'i') } };
+
+        // Remove user profile document
+        const userDeleteResult = await userCollection.deleteOne(emailFilter);
+        // Remove cart items
+        await cartCollection.deleteMany({ userMail: userEmail.trim() });
+
+        res.send({
+            success: true,
+            message: 'User account and profile data deleted successfully from database',
+            result: userDeleteResult
+        });
+    } catch (err) {
+        console.error("Error deleting user account:", err);
+        res.status(500).send({ error: true, message: err.message });
+    }
+});
 // UPDATE USER
 app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
     const id = req.params.id;
@@ -242,12 +267,15 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
         const {
           age,
           gender,
-          bodyType,
+          yogaExperience,
           primaryGoal,
-          goalPreference,
-          bodyFat,
+          yogaStyle,
+          fitnessLevel,
           diet,
           waterIntake,
+          hasInjuries,
+          injuryAreas,
+          injuryDetails,
           height,
           heightUnit,
           weight,
@@ -256,7 +284,7 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
           preferredDuration
         } = req.body;
 
-        if (!age || !gender || !bodyType || !primaryGoal || !goalPreference || !bodyFat || !diet || !waterIntake || !height || !weight || !preferredDuration) {
+        if (!age || !gender || !yogaExperience || !primaryGoal || !yogaStyle || !fitnessLevel || !diet || !waterIntake || !hasInjuries || !height || !weight || !preferredDuration) {
           return res.status(400).send({ error: true, message: 'Missing required onboarding profile fields' });
         }
 
@@ -266,12 +294,15 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
         const onboardingProfile = {
           age,
           gender,
-          bodyType,
+          yogaExperience,
           primaryGoal,
-          goalPreference,
-          bodyFat,
+          yogaStyle,
+          fitnessLevel,
           diet,
           waterIntake,
+          hasInjuries,
+          injuryAreas: Array.isArray(injuryAreas) ? injuryAreas : [],
+          injuryDetails: injuryDetails || '',
           height,
           heightUnit: heightUnit || 'cm',
           weight,
@@ -318,6 +349,128 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
       }
     });
 
+    // ── UPDATE LOGGED-IN USER PROFILE & PERSONALISATION ────────
+    app.put('/api/user/profile', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded?.email;
+        if (!userEmail) {
+          return res.status(401).send({ error: true, message: 'Unauthorized access: No email in token' });
+        }
+
+        const {
+          name,
+          phone,
+          address,
+          about,
+          mantra,
+          photoUrl,
+          photoURL,
+          // Tailored Yoga & Wellness fields
+          age,
+          gender,
+          yogaExperience,
+          primaryGoal,
+          yogaStyle,
+          preferredStyles,
+          fitnessLevel,
+          diet,
+          waterIntake,
+          hasInjuries,
+          injuryAreas,
+          injuryDetails,
+          height,
+          heightUnit,
+          weight,
+          weightUnit,
+          targetWeight,
+          preferredDuration,
+          preferredTimeOfDay,
+          weeklyPracticeGoal,
+          ambientSound,
+          notifications
+        } = req.body;
+
+        const filter = { email: { $regex: new RegExp(`^${userEmail.trim()}$`, 'i') } };
+        const existingUser = await userCollection.findOne(filter);
+        const prevOnboarding = existingUser?.onboardingProfile || {};
+
+        // Recalculate BMI if height or weight provided
+        const curHeight = height !== undefined ? height : prevOnboarding.height;
+        const curHeightUnit = heightUnit !== undefined ? heightUnit : (prevOnboarding.heightUnit || 'cm');
+        const curWeight = weight !== undefined ? weight : prevOnboarding.weight;
+        const curWeightUnit = weightUnit !== undefined ? weightUnit : (prevOnboarding.weightUnit || 'kg');
+
+        let bmiData = {};
+        if (curHeight && curWeight) {
+          bmiData = calculateBMI(curHeight, curHeightUnit, curWeight, curWeightUnit);
+        }
+
+        const updatedOnboardingProfile = {
+          ...prevOnboarding,
+          age: age !== undefined ? age : prevOnboarding.age,
+          gender: gender !== undefined ? gender : prevOnboarding.gender,
+          yogaExperience: yogaExperience !== undefined ? yogaExperience : prevOnboarding.yogaExperience,
+          primaryGoal: primaryGoal !== undefined ? primaryGoal : prevOnboarding.primaryGoal,
+          yogaStyle: yogaStyle !== undefined ? yogaStyle : prevOnboarding.yogaStyle,
+          preferredStyles: Array.isArray(preferredStyles) ? preferredStyles : (prevOnboarding.preferredStyles || (yogaStyle ? [yogaStyle] : [])),
+          fitnessLevel: fitnessLevel !== undefined ? fitnessLevel : prevOnboarding.fitnessLevel,
+          diet: diet !== undefined ? diet : prevOnboarding.diet,
+          waterIntake: waterIntake !== undefined ? waterIntake : prevOnboarding.waterIntake,
+          hasInjuries: hasInjuries !== undefined ? hasInjuries : prevOnboarding.hasInjuries,
+          injuryAreas: Array.isArray(injuryAreas) ? injuryAreas : (prevOnboarding.injuryAreas || []),
+          injuryDetails: injuryDetails !== undefined ? injuryDetails : (prevOnboarding.injuryDetails || ''),
+          height: curHeight,
+          heightUnit: curHeightUnit,
+          weight: curWeight,
+          weightUnit: curWeightUnit,
+          targetWeight: targetWeight !== undefined ? targetWeight : (prevOnboarding.targetWeight || curWeight),
+          preferredDuration: preferredDuration !== undefined ? Number(preferredDuration) : (prevOnboarding.preferredDuration || 30),
+          preferredTimeOfDay: preferredTimeOfDay !== undefined ? preferredTimeOfDay : (prevOnboarding.preferredTimeOfDay || 'morning'),
+          weeklyPracticeGoal: weeklyPracticeGoal !== undefined ? Number(weeklyPracticeGoal) : (prevOnboarding.weeklyPracticeGoal || 3),
+          ambientSound: ambientSound !== undefined ? ambientSound : (prevOnboarding.ambientSound || 'bowls'),
+          notifications: notifications !== undefined ? notifications : (prevOnboarding.notifications || {
+            dailyReminder: true,
+            reminderTime: '07:00',
+            quoteNotification: true,
+            emailDigest: true,
+            defaultCameraOff: false
+          }),
+          ...(bmiData.bmi !== undefined ? bmiData : {}),
+          updatedAt: new Date()
+        };
+
+        const finalPhoto = photoUrl || photoURL || existingUser?.photoURL || existingUser?.photoUrl;
+
+        const updateSet = {
+          ...(name !== undefined && { name }),
+          ...(phone !== undefined && { phone }),
+          ...(address !== undefined && { address }),
+          ...(about !== undefined && { about }),
+          ...(mantra !== undefined && { mantra }),
+          ...(finalPhoto && { photoUrl: finalPhoto, photoURL: finalPhoto }),
+          onboardingProfile: updatedOnboardingProfile,
+          onboardingCompleted: true,
+          updatedAt: new Date()
+        };
+
+        await userCollection.updateOne(
+          filter,
+          { $set: updateSet },
+          { upsert: true }
+        );
+
+        const updatedUser = await userCollection.findOne(filter);
+
+        res.send({
+          success: true,
+          message: 'Profile and personalisation saved successfully',
+          user: updatedUser
+        });
+      } catch (err) {
+        console.error("Error updating profile personalisation:", err);
+        res.status(500).send({ error: true, message: err.message });
+      }
+    });
 
     // Get User Onboarding Status
     app.get('/api/user/onboarding', verifyJWT, async (req, res) => {
@@ -370,87 +523,128 @@ app.put('/update-user/:id', verifyJWT, verifyAdmin, async (req, res) => {
 
           const text = `${cls.name || ''} ${cls.description || ''} ${cls.focus || ''} ${cls.category || ''} ${(Array.isArray(cls.categories) ? cls.categories.join(' ') : (cls.categories || ''))} ${(Array.isArray(cls.tags) ? cls.tags.join(' ') : (cls.tags || ''))}`.toLowerCase();
 
-          // 1. Primary Goal Matching
+          // 1. Primary Goal Matching (Tailored for Yoga goals)
           const goal = (profile.primaryGoal || '').toLowerCase();
           const goalPref = (profile.goalPreference || '').toLowerCase();
 
-          if (goal.includes('lose weight') || goal.includes('weight')) {
-            if (text.includes('weight') || text.includes('burn') || text.includes('cardio') || text.includes('active') || text.includes('vinyasa') || text.includes('flow') || text.includes('fat') || text.includes('mobility')) {
-              score += 20;
-              matchReasons.push('Optimized for weight management & active flow');
+          if (goal.includes('flexibility') || goal.includes('mobility')) {
+            if (text.includes('flexibility') || text.includes('stretch') || text.includes('hatha') || text.includes('yin') || text.includes('mobility') || text.includes('hip') || text.includes('spine')) {
+              score += 22;
+              matchReasons.push('Expands range of motion & joint flexibility');
             }
-          } else if (goal.includes('muscle') || goal.includes('gain')) {
-            if (text.includes('power') || text.includes('strength') || text.includes('core') || text.includes('sculpt') || text.includes('tone') || text.includes('building') || text.includes('hatha')) {
-              score += 20;
-              matchReasons.push('Targets core strength & body sculpting');
+          } else if (goal.includes('stress') || goal.includes('mental') || goal.includes('calm')) {
+            if (text.includes('stress') || text.includes('relax') || text.includes('restorative') || text.includes('nidra') || text.includes('breath') || text.includes('calm') || text.includes('peace')) {
+              score += 22;
+              matchReasons.push('Calms nervous system & relieves stress');
             }
-          } else if (goal.includes('shredded') || goal.includes('shred')) {
-            if (text.includes('power') || text.includes('intense') || text.includes('core') || text.includes('vinyasa') || text.includes('workout') || text.includes('cross') || text.includes('beach')) {
-              score += 20;
-              matchReasons.push('High-intensity session for muscle definition');
+          } else if (goal.includes('strength') || goal.includes('tone') || goal.includes('power')) {
+            if (text.includes('strength') || text.includes('power') || text.includes('ashtanga') || text.includes('vinyasa') || text.includes('core') || text.includes('sculpt')) {
+              score += 22;
+              matchReasons.push('Builds functional strength & core stability');
+            }
+          } else if (goal.includes('weight') || goal.includes('burn')) {
+            if (text.includes('vinyasa') || text.includes('power') || text.includes('flow') || text.includes('burn') || text.includes('cardio') || text.includes('active') || text.includes('bikram')) {
+              score += 22;
+              matchReasons.push('Dynamic active flow for calorie burn');
+            }
+          } else if (goal.includes('spiritual') || goal.includes('mindful') || goal.includes('meditation')) {
+            if (text.includes('kundalini') || text.includes('meditation') || text.includes('pranayama') || text.includes('breath') || text.includes('chakra') || text.includes('mindful')) {
+              score += 22;
+              matchReasons.push('Deep breathwork & mindfulness integration');
+            }
+          } else if (goal.includes('recovery') || goal.includes('rehabilitation') || goal.includes('injury')) {
+            if (text.includes('gentle') || text.includes('restorative') || text.includes('therapeutic') || text.includes('chair') || text.includes('healing') || text.includes('safe')) {
+              score += 25;
+              matchReasons.push('Gentle rehabilitation & safe therapeutic postures');
             }
           }
 
-          // Goal/Body Preference match
+          // Preferred Yoga Style matching
+          const preferredStyles = Array.isArray(profile.preferredStyles) && profile.preferredStyles.length > 0
+            ? profile.preferredStyles
+            : (profile.yogaStyle ? [profile.yogaStyle] : []);
+
+          for (const style of preferredStyles) {
+            const s = (style || '').toLowerCase();
+            if (s && text.includes(s)) {
+              score += 15;
+              matchReasons.push(`Matches your favorite style: ${style}`);
+              break;
+            }
+          }
+
+          // Goal / Body Preference match (legacy fallback)
           if (goalPref && text.includes(goalPref)) {
-            score += 10;
-            matchReasons.push(`Matches body preference: ${profile.goalPreference}`);
+            score += 8;
+            matchReasons.push(`Matches style preference: ${profile.goalPreference}`);
           }
 
-          // 2. Preferred Duration Matching
+          // 2. Experience Level Matching
+          const exp = (profile.yogaExperience || '').toLowerCase();
+          const clsLevel = (cls.level || '').toLowerCase();
+
+          if (exp.includes('beginner')) {
+            if (clsLevel.includes('beginner') || text.includes('beginner') || text.includes('all levels') || text.includes('foundational')) {
+              score += 12;
+              matchReasons.push('Beginner-friendly step-by-step guidance');
+            }
+          } else if (exp.includes('intermediate')) {
+            if (clsLevel.includes('intermediate') || text.includes('intermediate') || text.includes('all levels')) {
+              score += 12;
+              matchReasons.push('Progressive challenge suitable for intermediate yogis');
+            }
+          } else if (exp.includes('advanced')) {
+            if (clsLevel.includes('advanced') || text.includes('advanced') || text.includes('deep') || text.includes('mastery')) {
+              score += 15;
+              matchReasons.push('Advanced asana sequencing for seasoned practitioners');
+            }
+          }
+
+          // 3. Injury Protection Matching
+          if (profile.hasInjuries === 'yes' && Array.isArray(profile.injuryAreas) && profile.injuryAreas.length > 0) {
+            if (text.includes('gentle') || text.includes('restorative') || text.includes('safe') || text.includes('low impact') || text.includes('healing')) {
+              score += 15;
+              matchReasons.push(`Modified & safe for protecting: ${profile.injuryAreas.slice(0, 2).join(', ')}`);
+            }
+          }
+
+          // 4. Preferred Duration Matching
           const userDur = Number(profile.preferredDuration) || 30;
           const classDur = Number(cls.duration) || 30;
           const durDiff = Math.abs(userDur - classDur);
 
           if (durDiff === 0) {
-            score += 15;
-            matchReasons.push(`Perfect match for your ${userDur}-min daily goal`);
+            score += 12;
+            matchReasons.push(`Exact match for your ${userDur}-min practice window`);
           } else if (durDiff <= 15) {
-            score += 8;
-            matchReasons.push(`Fits your time availability (${classDur} mins)`);
+            score += 6;
+            matchReasons.push(`Fits your schedule (${classDur} mins)`);
           }
 
-          // 3. BMI Category & Body Fat Matching
+          // 5. BMI Category & Body Metric factor
           const bmiCat = (profile.bmiCategory || '').toLowerCase();
-          const bodyFat = (profile.bodyFat || '').toLowerCase();
-
-          if (bmiCat.includes('overweight') || bmiCat.includes('obese') || bodyFat.includes('high') || bodyFat.includes('> 30%')) {
+          if (bmiCat.includes('overweight') || bmiCat.includes('obese')) {
             if (text.includes('joint') || text.includes('mobility') || text.includes('gentle') || text.includes('flow') || text.includes('cardio') || text.includes('stretch')) {
-              score += 10;
-              matchReasons.push('Promotes joint mobility & comfortable calorie burn');
+              score += 8;
+              matchReasons.push('Joint-friendly flow promoting comfortable movement');
             }
-          } else if (bmiCat.includes('underweight') || bodyFat.includes('low') || bodyFat.includes('< 15%')) {
-            if (text.includes('gentle') || text.includes('restorative') || text.includes('hatha') || text.includes('strength') || text.includes('alignment')) {
-              score += 10;
-              matchReasons.push('Focuses on balanced strength & gentle alignment');
-            }
-          } else if (bmiCat.includes('normal')) {
-            if (text.includes('balance') || text.includes('power') || text.includes('vinyasa') || text.includes('flexibility')) {
-              score += 5;
-              matchReasons.push('Ideal session for maintaining healthy BMI');
+          } else if (bmiCat.includes('underweight')) {
+            if (text.includes('gentle') || text.includes('restorative') || text.includes('strength') || text.includes('alignment')) {
+              score += 8;
+              matchReasons.push('Grounding sequence building balanced posture');
             }
           }
 
-          // 4. Body Type & Age Factor
-          const bodyType = (profile.bodyType || '').toLowerCase();
-          if (bodyType.includes('heavy') || bodyType.includes('big')) {
-            if (text.includes('mobility') || text.includes('stretch') || text.includes('flow')) {
-              score += 5;
-              matchReasons.push('Low-impact movement friendly for body type');
-            }
-          }
-
-          // 5. Reuse existing class level if present (Do NOT score on invented experience level)
           if (cls.level) {
-            matchReasons.push(`Level: ${cls.level}`);
+            matchReasons.push(`Class Level: ${cls.level}`);
           }
 
-          const matchPercentage = Math.min(98, Math.max(62, Math.round(score)));
+          const matchPercentage = Math.min(99, Math.max(65, Math.round(score)));
 
           return {
             ...cls,
             matchPercentage,
-            matchReasons: matchReasons.length > 0 ? matchReasons : ['Recommended for your fitness profile']
+            matchReasons: matchReasons.length > 0 ? matchReasons : ['Recommended for your personalized yoga profile']
           };
         });
 

@@ -94,20 +94,20 @@ const Recommendations = () => {
             <div>
               <h1 className="text-2xl font-bold text-navy">Recommended Classes For You</h1>
               <p className="text-sm text-text-secondary mt-0.5">
-                Curated based on your target: <strong className="text-navy font-semibold">{profile.primaryGoal} ({profile.goalPreference})</strong>
+                Curated based on your target: <strong className="text-navy font-semibold">{profile.primaryGoal} ({profile.yogaStyle || profile.goalPreference || 'Flow'})</strong>
               </p>
             </div>
           </div>
 
           <Link
-            to="/dashboard/onboarding"
-            className="px-4 py-2 border border-border-ui hover:border-teal text-xs font-bold text-navy hover:text-teal rounded-btn transition-colors self-start md:self-auto inline-flex items-center gap-1.5"
+            to="/dashboard/profile"
+            className="px-4 py-2 border border-teal text-teal hover:bg-teal-100/50 text-xs font-bold rounded-btn transition-colors self-start md:self-auto inline-flex items-center gap-1.5 shadow-xs"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            <span>Edit Onboarding Profile</span>
+            <span>Personalise Profile</span>
           </Link>
         </div>
 
@@ -116,7 +116,7 @@ const Recommendations = () => {
           <div className="bg-bg-base p-3 rounded-xl">
             <p className="text-[10px] uppercase font-bold text-text-secondary">BMI & Category</p>
             <p className="text-base font-bold text-navy mt-0.5">
-              {profile.bmi} <span className="text-xs font-semibold text-teal-600">({profile.bmiCategory})</span>
+              {profile.bmi} <span className="text-xs font-semibold text-teal-600">({profile.bmiCategory || 'Normal'})</span>
             </p>
           </div>
           <div className="bg-bg-base p-3 rounded-xl">
@@ -124,12 +124,14 @@ const Recommendations = () => {
             <p className="text-base font-bold text-navy mt-0.5">{profile.preferredDuration} mins / day</p>
           </div>
           <div className="bg-bg-base p-3 rounded-xl">
-            <p className="text-[10px] uppercase font-bold text-text-secondary">Body Fat Range</p>
-            <p className="text-base font-bold text-navy mt-0.5">{profile.bodyFat}</p>
+            <p className="text-[10px] uppercase font-bold text-text-secondary">Experience & Safeguard</p>
+            <p className="text-base font-bold text-navy mt-0.5">
+              {profile.yogaExperience || 'Practitioner'} {profile.hasInjuries === 'yes' && profile.injuryAreas?.length > 0 ? `· 🛡️ ${profile.injuryAreas.length} Areas` : ''}
+            </p>
           </div>
           <div className="bg-bg-base p-3 rounded-xl">
             <p className="text-[10px] uppercase font-bold text-text-secondary">Diet & Hydration</p>
-            <p className="text-base font-bold text-navy mt-0.5">{profile.diet} · {profile.waterIntake}</p>
+            <p className="text-base font-bold text-navy mt-0.5">{profile.diet || 'Balanced'} · {profile.waterIntake || '2L'}</p>
           </div>
         </div>
       </div>

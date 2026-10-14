@@ -155,17 +155,29 @@ const Navbar = () => {
                 >
                   Dashboard
                 </NavLink>
+                <NavLink
+                  to="/dashboard/profile"
+                  className={({ isActive }) =>
+                    `text-sm font-semibold px-3 py-2 rounded-lg transition-colors duration-200 flex items-center gap-1.5 ${isActive ? 'text-teal bg-teal-100/40' : linkClass
+                    }`
+                  }
+                >
+                  <span>✨</span>
+                  <span>Personalisation</span>
+                </NavLink>
                 {currentUser?.photoURL ? (
                   <img
                     src={currentUser.photoURL}
                     alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover border-2 border-border-ui cursor-pointer"
-                    onClick={() => navigate('/dashboard')}
+                    title="View Profile & Personalisation"
+                    className="w-9 h-9 rounded-full object-cover border-2 border-border-ui cursor-pointer hover:border-teal transition-all"
+                    onClick={() => navigate('/dashboard/profile')}
                   />
                 ) : (
                   <div
-                    className="w-9 h-9 rounded-full bg-teal text-white flex items-center justify-center text-sm font-bold cursor-pointer"
-                    onClick={() => navigate('/dashboard')}
+                    title="View Profile & Personalisation"
+                    className="w-9 h-9 rounded-full bg-teal text-white flex items-center justify-center text-sm font-bold cursor-pointer hover:bg-teal-600 transition-colors"
+                    onClick={() => navigate('/dashboard/profile')}
                   >
                     {currentUser?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
@@ -229,6 +241,7 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Link to="/dashboard" className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-2">Dashboard</Link>
+                    <Link to="/dashboard/profile" className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-teal hover:bg-teal-100/50">✨ My Profile & Personalisation</Link>
                     <button onClick={handleLogout} className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-error hover:bg-red-50">Logout</button>
                   </>
                 )}
