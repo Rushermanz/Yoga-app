@@ -4,6 +4,7 @@ import axios from 'axios'
 import GoogleLogin from '../../components/headers/Social/GoogleLogin'
 import useAuth from '../../hooks/useAuth'
 import { getOnboardingDraft, syncOnboardingDraft } from '../../ultilities/onboardingSync'
+import { API_BASE_URL } from '../../config/api'
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -27,7 +28,7 @@ const Login = () => {
         let token = localStorage.getItem('token')
         if (!token && user?.email) {
           try {
-            const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+            const tokenRes = await axios.post(`${API_BASE_URL}/api/set-token`, {
               email: user.email,
               name: user.displayName || user.email.split('@')[0]
             })

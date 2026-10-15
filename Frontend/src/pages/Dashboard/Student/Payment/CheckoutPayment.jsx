@@ -4,9 +4,10 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import useAxiosSecure from '../../../../hooks/useAxiosSecure';
 import useUser from '../../../../hooks/useUser';
 import { json, Navigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../../../config/api';
 
 const CheckoutPayment = ({ price, cartItm }) => {
-  const URL = `http://localhost:5000/payment-info?${cartItm && `classId=${cartItm}`}`;
+  const URL = `${API_BASE_URL}/payment-info?${cartItm ? `classId=${cartItm}` : ''}`;
   const stripe = useStripe();
   const elements = useElements();
   const axiosSecure = useAxiosSecure();

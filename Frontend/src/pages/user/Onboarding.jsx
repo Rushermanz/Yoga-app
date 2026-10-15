@@ -5,6 +5,7 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 import useAuth from '../../hooks/useAuth'
 import { getOnboardingDraft, saveOnboardingDraft, clearOnboardingDraft } from '../../ultilities/onboardingSync'
+import { API_BASE_URL } from '../../config/api'
 
 // Option Card Helper Component
 const OptionCard = ({ selected, onClick, title, description, icon }) => (
@@ -107,7 +108,7 @@ const Onboarding = () => {
       const token = localStorage.getItem('token')
       if (!token) { setProfileLoaded(true); return }
       axios
-        .get('http://localhost:5000/api/user/onboarding', { headers: { Authorization: `Bearer ${token}` } })
+        .get(`${API_BASE_URL}/api/user/onboarding`, { headers: { Authorization: `Bearer ${token}` } })
         .then((res) => {
           const p = res.data?.onboardingProfile
           if (p) {
@@ -300,7 +301,7 @@ const Onboarding = () => {
       try {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No authentication token found. Please sign in again.')
-        const res = await axios.post('http://localhost:5000/api/onboarding', payload, {
+        const res = await axios.post(`${API_BASE_URL}/api/onboarding`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.data?.success) {

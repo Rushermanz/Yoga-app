@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../config/api'
 
 const ONBOARDING_DRAFT_KEY = 'yoga_onboarding_draft'
 
@@ -43,7 +44,7 @@ export const syncOnboardingDraft = async (token) => {
     const draft = getOnboardingDraft()
     if (!draft || !token) return null
 
-    const res = await axios.post('http://localhost:5000/api/onboarding', draft, {
+    const res = await axios.post(`${API_BASE_URL}/api/onboarding`, draft, {
       headers: {
         Authorization: `Bearer ${token}`
       }

@@ -15,6 +15,7 @@ import {
 } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 
 
 export const AuthContext = createContext()
@@ -114,12 +115,16 @@ const AuthProvider = ({children}) => {
             setUser(user)
 
             if(user){
-                axios.post('http://localhost:5000/api/set-token', {email: user.email, name: user.displayName})
+                axios.post(`${API_BASE_URL}/api/set-token`, {email: user.email, name: user.displayName})
                 .then((data) => {
-                    if(data.data.token){
+                    if(data.data?.token){
                         localStorage.setItem('token', data.data.token);
-                        setLoader(false);
                     }
+                    setLoader(false);
+                })
+                .catch((err) => {
+                    console.error('Token error in AuthProvider:', err);
+                    setLoader(false);
                 })
             } else{
                 localStorage.removeItem('token')

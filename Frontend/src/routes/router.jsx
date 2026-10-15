@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 import Home from "../pages/Home/Home";
 import MainLayout from "../layout/MainLayout";
 import Instructor from "../pages/Instructors/Instructor";
@@ -63,7 +64,7 @@ export const router = createBrowserRouter([
       {
         path: "/class/:id",
         element: <SingleClass />,
-        loader: ({params}) => fetch(`http://localhost:5000/class/${params.id}`)
+        loader: ({params}) => fetch(`${API_BASE_URL}/class/${params.id}`)
       },
       {
         path: "/onboarding",
@@ -202,7 +203,7 @@ export const router = createBrowserRouter([
       {
         path: "update-user/:id",
         element: <UpdateUser/>,
-        loader: ({params}) => fetch(`http://localhost:5000/users/${params.id}`)
+        loader: ({params}) => fetch(`${API_BASE_URL}/users/${params.id}`)
       }
     ]
 

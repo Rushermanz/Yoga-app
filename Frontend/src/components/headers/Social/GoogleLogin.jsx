@@ -3,6 +3,7 @@ import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getOnboardingDraft, syncOnboardingDraft } from "../../../ultilities/onboardingSync";
+import { API_BASE_URL } from "../../../config/api";
 
 
 const GoogleLogin = () => {
@@ -24,7 +25,7 @@ const GoogleLogin = () => {
                 
                 if(user.email && user.displayName){
                     try {
-                        await axios.post('http://localhost:5000/new-user', userImp);
+                        await axios.post(`${API_BASE_URL}/new-user`, userImp);
                     } catch (e) {
                         // User might already exist in MongoDB
                     }
@@ -32,7 +33,7 @@ const GoogleLogin = () => {
                     // Obtain token
                     let token = localStorage.getItem('token');
                     try {
-                        const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+                        const tokenRes = await axios.post(`${API_BASE_URL}/api/set-token`, {
                             email: user.email,
                             name: user.displayName
                         });

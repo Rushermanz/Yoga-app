@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 
 import axios, { Axios } from "axios"
+import { API_BASE_URL } from "../config/api";
 
 
 const useAxiosFetch = () => {
     const axiosInstance = axios.create({
-        baseURL: 'http://localhost:5000/',
-        
+        baseURL: API_BASE_URL,
       });
 
       //interceptors

@@ -6,6 +6,7 @@ import { AuthContext } from '../../ultilities/providers/AuthProvider'
 import axios from 'axios'
 import { updateProfile } from 'firebase/auth'
 import { getOnboardingDraft, syncOnboardingDraft } from '../../ultilities/onboardingSync'
+import { API_BASE_URL } from '../../config/api'
 
 const inputClass =
   'w-full px-4 py-2.5 text-sm border border-border-ui rounded-btn focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal transition-all bg-white'
@@ -53,10 +54,10 @@ const Register = () => {
           phone: data.phone,
           address: data.address,
         }
-        await axios.post('http://localhost:5000/new-user', userPayload)
+        await axios.post(`${API_BASE_URL}/new-user`, userPayload)
 
         // Get authentication token and store in localStorage
-        const tokenRes = await axios.post('http://localhost:5000/api/set-token', {
+        const tokenRes = await axios.post(`${API_BASE_URL}/api/set-token`, {
           email: user.email,
           name: user.displayName
         })
