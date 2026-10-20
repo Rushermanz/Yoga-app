@@ -44,13 +44,13 @@ Platform Highlights
 
 Technology Stack
 
-Update this section to match the technologies actually used in the repository.
+The project uses separate frontend and backend directories. Update the following technologies to match the actual implementation.
 
-- Frontend: [Add the frontend framework or technologies]
-- Backend: [Add the backend framework or language]
-- Database: [Add the database]
-- Authentication: [Add the authentication method]
-- Payment Integration: [Add the payment provider, if implemented]
+- Frontend: [Frontend technologies]
+- Backend: [Backend framework or language]
+- Database: [Database technology]
+- Authentication: [Authentication method]
+- Payment Integration: [Payment provider, if implemented]
 - Development Tools: Git and GitHub
 
 Getting Started
@@ -59,7 +59,7 @@ Follow these steps to obtain a local copy of the project.
 
 Prerequisites
 
-Install the software required by the project, such as its runtime, package manager, database, and any required development tools.
+Install the runtime, package manager, database, and development tools required by the project.
 
 Installation
 
@@ -71,13 +71,13 @@ Installation
    
    cd Yoga-app
 
-3. Install the dependencies using the package manager appropriate for the project.
+3. Install the dependencies required by the frontend and backend.
 
 4. Configure the required environment variables and database settings, if applicable.
 
-5. Run the application using the development command defined by the project.
+5. Start the frontend and backend using the development commands specified by their respective configurations.
 
-«Note: The exact dependency installation, database setup, and run commands depend on the framework and configuration files in the repository.»
+Note: Refer to the configuration files inside "Frontend/" and "Backend/" for the exact installation and startup commands.
 
 Application Workflow
 
@@ -91,24 +91,25 @@ Application Workflow
 
 Project Structure
 
-The directory structure depends on the actual implementation. A typical structure for this type of application may separate frontend components, backend logic, database models, authentication, and static assets.
+The repository is organized into separate frontend and backend directories, along with supporting project documentation.
 
 Yoga-app/
-├── frontend/       # User interface
-├── backend/        # Server-side logic and APIs
-├── database/       # Database configuration or models
-├── assets/         # Images, icons, and other assets
-├── tests/          # Automated tests, if available
-├── .env.example    # Example environment configuration
-└── README.md       # Project documentation
+├── Backend/                                # Backend application
+├── Frontend/                               # Frontend application
+├── .gitattributes                          # Git configuration
+├── README.md                               # Project documentation
+├── Yoga-Master-AI-Enhanced-Online-Yoga-...  # Supporting project document
+├── Yoga_Master_Feature_Set_Abstract.docx    # Feature set and abstract
+├── mca_Project.docx                         # MCA project documentation
+└── promt.docx                               # Supporting project document
 
-This is an illustrative structure, not a verified listing of the repository's actual files.
+The long document filename is abbreviated here because its complete name is not visible in the provided screenshot.
 
 Future Enhancements
 
 Potential improvements include personalized yoga learning plans, AI-assisted yoga guidance, offline workout support, progress tracking, improved instructor–learner interaction, and additional learning resources.
 
-These enhancements should be treated as planned work unless they are already implemented.
+Features listed as future enhancements should be considered planned work unless they are already implemented.
 
 Security
 
@@ -127,18 +128,17 @@ Contributions that improve the platform, documentation, usability, or reliabilit
 4. Commit your changes with a descriptive message.
 5. Open a pull request describing the changes.
 
-License
-
 
 Contributors
 
 This project was collaboratively developed by:
 
-Contributor| GitHub Profile
-Agnivesh R| "@Rushermanz" (https://github.com/Rushermanz)
-Sebin Babu| "@sebinbabu5555" (https://github.com/sebinbabu5555)
+Agnivesh R — "@Rushermanz" (https://github.com/Rushermanz)
 
-We would like to acknowledge the contributions, collaboration, and efforts of both team members in developing the Yoga Master platform.
+Sebin Babu — "@sebinbabu5555" (https://github.com/sebinbabu5555)
+
+We acknowledge the contributions, collaboration, and efforts of both team members in developing the Yoga Master platform.
+
 ---
 
 Yoga Master — Learn, practice, and grow through yoga.
