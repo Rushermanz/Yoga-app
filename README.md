@@ -1,14 +1,14 @@
-Yoga Master — Online Yoga Learning Platform
+#Yoga Master — Online Yoga Learning Platform
 
 Yoga Master is an online yoga learning platform designed to help users discover yoga classes, learn from instructors, and manage their yoga learning journey. The platform includes dedicated interfaces for users, instructors, and administrators, with features for class management, instructor applications, and content approval.
 
-Overview
+#Overview
 
 Yoga Master aims to make yoga education more accessible through a centralized platform where learners can explore classes and instructors, access their purchased classes, and manage their learning activities. Instructors can apply to teach and submit classes for approval, while administrators oversee users, instructors, classes, and publication workflows.
 
 The project follows a role-based approach to provide different functionality and access levels for each type of user.
 
-Features
+#Features
 
 User Module
 
