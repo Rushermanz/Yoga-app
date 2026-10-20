@@ -128,6 +128,9 @@ Contributions that improve the platform, documentation, usability, or reliabilit
 4. Commit your changes with a descriptive message.
 5. Open a pull request describing the changes.
 
+License
+
+No license has been specified in this README. Add an appropriate license after confirming the project's intended usage and distribution terms.
 
 Contributors
 
